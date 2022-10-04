@@ -100,6 +100,7 @@ drinks %>%
   arrange(desc(average_value))
 ```
 _Those listed below have a higher calorie value than average._
+_I could have made the overall average a function_
 
 ```{r}
 drinks %>% 
@@ -114,7 +115,7 @@ Question 7.
 
 Which is the best type of coffee drink (and by ‘drink’ we mean the combination of Beverage_category, Beverage and Beverage_prep) to get if you’re worried about consuming too many calories?
 
-_Tazo Tea, has no calories if this counts_
+_Tazo Tea, prep is the same, has no calories if this counts_
 _Best coffee is brewed Coffee, size doesn't matter much_
 
 ```{r}
