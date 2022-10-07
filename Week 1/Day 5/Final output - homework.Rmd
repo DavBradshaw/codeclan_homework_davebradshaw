@@ -1,0 +1,265 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+#Functions I want to use
+Select - USED
+Filter individual and as vector - USED
+Mutate - USED
+Group_by - USED
+Summarise - USED
+pull - USED
+Arrange - USED
+is.na - USED
+distinct - USED
+across
+na.if then coalesce and drop.na - JUST DROPPED 0 values instead using filter
+case_when - USED
+recode - USED
+
+
+#load libraries and data required
+```{r}
+library(tidyverse)
+books <- read_csv("data/books.csv")
+```
+
+#General overview of data
+
+_The data is 11123 rows by 13 columns._
+_The column names are;_
+[1] "rowid"              "bookID"            
+ [3] "title"              "authors"           
+ [5] "average_rating"     "isbn"              
+ [7] "isbn13"             "language_code"     
+ [9] "num_pages"          "ratings_count"     
+[11] "text_reviews_count" "publication_date"  
+[13] "publisher" 
+
+_There are no na values within this dataset._
+
+```{r}
+dim(books)
+names(books)
+sum(is.na(books))
+```
+
+#Select data the has value to my analysis using select function - removed first 2 columns and ISBN data
+
+```{r}
+selected_books <- books %>% 
+  select(title, authors, average_rating, language_code, num_pages, ratings_count, text_reviews_count, publication_date, publisher)
+dim(selected_books)
+```
+
+#Selected distinct data by book title.
+_This removed 775 entires from the data_set (11123 - 10348)_
+
+```{r}
+selected_books %>% 
+  distinct(title)
+
+11123 - 10348
+```
+#Find the authors with the most books entered on the list and then confirm whether this changes if I check distinct book titles.
+_it does, lots of duplicates for Stephen King in particular_
+```{r}
+selected_books %>% 
+  group_by(authors) %>% 
+  summarise(books_by_author = n()) %>% 
+  arrange(desc(books_by_author))
+
+selected_books %>% 
+  group_by(authors) %>%
+  distinct(title) %>% 
+  summarise(books_by_author = n()) %>% 
+  arrange(desc(books_by_author))
+```
+#details on some specific authors I have read and the most profilic ones
+```{r}
+selected_books %>% 
+  filter(authors %in% c("Robert Jordan", "Michael Connelly"))
+
+selected_books %>% 
+  filter(authors == "Stephen King")
+
+selected_books %>% 
+  filter(authors == "P.G. Wodehouse")
+```
+#what language has the longest books
+1. check for languages - there are 27 in total
+2. change alternative language codes for english into eng
+3. check the new counts
+4. find average length of book by language, remembering to drop 0 values (both mean and median) 
+
+```{r}
+selected_books %>% 
+  group_by(language_code) %>% 
+  summarise(total_lang_code = n()) %>% 
+  arrange(desc(total_lang_code))
+
+lang_code_imputed <- selected_books %>%
+  mutate(simplified_lang = recode(
+    language_code, "en-GB" = "eng", "en-US" = "eng", "en-CA" = "eng"))
+lang_code_imputed
+
+lang_code_imputed %>% 
+  group_by(simplified_lang) %>% 
+  summarise(total_simplified_lang = n()) %>% 
+  arrange(desc(total_simplified_lang))
+
+lang_code_imputed %>%
+  filter(num_pages != 0) %>% 
+  group_by(simplified_lang) %>% 
+  summarise(mean_pages_by_lang = mean(num_pages)) %>% 
+  arrange(mean_pages_by_lang)
+  
+lang_code_imputed %>%
+  filter(num_pages != 0) %>% 
+  group_by(simplified_lang) %>% 
+  summarise(median_pages_by_lang = median(num_pages)) %>% 
+  arrange(median_pages_by_lang)
+
+```
+
+#Look into top rated books by quantity of reviews, are more reviewed books rated better?
+
+_The books that have been rated the most, have the highest ratings as a mean and trend maintains for median though <500 and <50 have same result_ 
+
+```{r}
+rating_grouped <- selected_books %>% 
+  select(title, average_rating, ratings_count) %>% 
+  mutate(
+    ratings_bracket = case_when(
+      ratings_count >= 100000 ~ "100k ratings or more",
+      ratings_count >= 50000  ~ "50k ratings or more",
+      ratings_count >= 5000   ~ "5k ratings or more",
+      ratings_count >= 500    ~ "500 ratings or more",
+      ratings_count >= 50     ~ "50 ratings or more",
+      TRUE                    ~ "Fewer than 50 ratings"
+    )
+  )
+
+rating_grouped %>% 
+  group_by(ratings_bracket) %>% 
+  summarise(mean_rating_by_bracket = mean(average_rating)) %>% 
+  arrange(desc(mean_rating_by_bracket))
+
+rating_grouped %>% 
+  group_by(ratings_bracket) %>% 
+  summarise(median_rating_by_bracket = median(average_rating)) %>% 
+  arrange(desc(median_rating_by_bracket))
+```
+#Ratio of ratings to reviews
+_First calculated the median ratio of ratings to reviews (15.344)_
+
+_Then calculated each result as a percentage of that i.e. 100% equal median amount of ratings relative to review. This shows certain books that have been reviewed more/less often than could be expected based on the number of ratings it received._
+
+_To reduce errors created by small sample size I then changed the minimum amount of ratings and reviews to the median value for each, this made the most difference for minimum where some books had been both reviewed and rated once_
+
+```{r}
+#find median number of ratings
+median_rating_count <-selected_books %>% 
+  summarise(median_rating_count = median(ratings_count)) %>% 
+  pull(median_rating_count)
+
+#find median number of text reviews
+median_text_review_count <- selected_books %>% 
+  summarise(median_text_review_count = median(text_reviews_count)) %>% 
+  pull(median_text_review_count)
+
+#find median ratio of ratings to reviews
+ratio_of_selected_books <- selected_books %>% 
+  select(title, ratings_count, text_reviews_count) %>%
+  filter(ratings_count != 0, text_reviews_count != 0) %>% 
+  mutate(rating_review_ratio = ratings_count / text_reviews_count) %>%
+  summarise(ratio_median = median(rating_review_ratio)) %>% 
+  pull(ratio_median)
+ratio_of_selected_books
+
+#find max and min (sliced) difference from average ratio of ratings to reviews
+selected_books %>% 
+  select(title, authors, ratings_count, text_reviews_count) %>%
+  filter(ratings_count != 0, text_reviews_count != 0) %>% 
+  mutate(rating_review_ratio = ratings_count / text_reviews_count) %>%
+  mutate(percentage_from_average_ratio = (rating_review_ratio/ratio_of_selected_books) * 100) %>% 
+  slice_max(percentage_from_average_ratio, n = 10)
+
+selected_books %>% 
+  select(title, authors, ratings_count, text_reviews_count) %>%
+  filter(ratings_count != 0, text_reviews_count != 0) %>% 
+  mutate(rating_review_ratio = ratings_count / text_reviews_count) %>%
+  mutate(percentage_from_average_ratio = (rating_review_ratio/ratio_of_selected_books) * 100) %>% 
+  slice_min(percentage_from_average_ratio, n = 10)
+
+#find max and min (sliced) difference from average ratio of ratings to reviews when over median values of ratings and reviews
+selected_books %>% 
+  select(title, authors, ratings_count, text_reviews_count) %>%
+  filter(ratings_count > median_rating_count, text_reviews_count > median_text_review_count) %>% 
+  mutate(rating_review_ratio = ratings_count / text_reviews_count) %>%
+  mutate(percentage_from_average_ratio = (rating_review_ratio/ratio_of_selected_books) * 100) %>% 
+  slice_max(percentage_from_average_ratio, n = 10)
+
+selected_books %>% 
+  select(title, authors, ratings_count, text_reviews_count) %>%
+  filter(ratings_count > median_rating_count, text_reviews_count > median_text_review_count) %>% 
+  mutate(rating_review_ratio = ratings_count / text_reviews_count) %>%
+  mutate(percentage_from_average_ratio = (rating_review_ratio/ratio_of_selected_books) * 100) %>% 
+  slice_min(percentage_from_average_ratio, n = 10)
+
+
+
+
+```
+
+
+
+# what year had the best reviewed books? And what year had the most best reviewed books?
+_There are 15 years in which a 5/5 book was released_
+_There were the most 5 star books released in 2003_
+
+
+```{r}
+
+books_by_year <- selected_books %>%
+  mutate(publication_date = as.Date(publication_date, "%m/%d/%Y")) %>% 
+  mutate(year_of_publication = substr(publication_date, 1,4)) %>% 
+  mutate(year_of_publication = as.numeric(year_of_publication))
+
+books_by_year %>% 
+  group_by(year_of_publication) %>% 
+  summarise(title, avg_rating = max(average_rating)) %>% 
+  arrange(desc(avg_rating)) %>% 
+  ungroup()
+
+books_by_year %>% 
+  filter(average_rating == 5.00) %>%
+  group_by(year_of_publication) %>% 
+  summarise(five_star_per_year = n()) %>% 
+  arrange(desc(five_star_per_year)) %>% 
+  ungroup()
+
+
+```
+
+
+#Use across function to sum ratings and reviews to see which author has had the most of each
+_top answer is JK Rowling/Mary GrandPre for both while second place etc. is quite different_
+
+
+```{r}
+selected_books
+
+selected_books %>%
+  select(authors, ratings_count, text_reviews_count) %>% 
+  group_by(authors) %>% 
+  summarise(across(where(is.numeric), sum)) %>% 
+  arrange(desc(ratings_count))
+
+selected_books %>%
+  select(authors, ratings_count, text_reviews_count) %>% 
+  group_by(authors) %>% 
+  summarise(across(where(is.numeric), sum)) %>% 
+  arrange(desc(text_reviews_count))
+```
