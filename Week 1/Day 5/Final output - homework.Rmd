@@ -3,22 +3,6 @@ title: "R Notebook"
 output: html_notebook
 ---
 
-#Functions I want to use
-Select - USED
-Filter individual and as vector - USED
-Mutate - USED
-Group_by - USED
-Summarise - USED
-pull - USED
-Arrange - USED
-is.na - USED
-distinct - USED
-across
-na.if then coalesce and drop.na - JUST DROPPED 0 values instead using filter
-case_when - USED
-recode - USED
-
-
 #load libraries and data required
 ```{r}
 library(tidyverse)
@@ -240,6 +224,9 @@ books_by_year %>%
   arrange(desc(five_star_per_year)) %>% 
   ungroup()
 
+books_by_year %>% 
+  filter(average_rating == 5.00 & year_of_publication == 2003)
+
 
 ```
 
@@ -263,3 +250,42 @@ selected_books %>%
   summarise(across(where(is.numeric), sum)) %>% 
   arrange(desc(text_reviews_count))
 ```
+
+
+#Find best average rating by publisher
+Shows top rated are ones with only 1 book on list, there are 1295 publishing houses which only published 1 book on the list
+filter to only include publishing houses with at least 10 books
+Highest rated publisher with over 10 books is VIZ media
+```{r}
+selected_books %>% 
+  select(title, authors, average_rating, publisher) %>% 
+  group_by(publisher) %>% 
+  summarise(publisher_avg_rating = mean(average_rating)) %>%
+  arrange(desc(publisher_avg_rating))
+
+selected_books %>% 
+  filter(publisher == "Academica Press")
+
+selected_books %>% 
+  group_by(publisher) %>%
+  summarise(books_published = n()) %>% 
+  filter(books_published == 1)
+
+selected_books %>% 
+  group_by(publisher) %>%
+  summarise(books_published = n()) %>% 
+  filter(books_published >10)
+
+selected_books %>% 
+  group_by(publisher) %>%
+  summarise(average_rating, books_published = n()) %>% 
+  filter(books_published >10) %>% 
+  summarise(publisher_avg_rating = mean(average_rating)) %>%
+  arrange(desc(publisher_avg_rating))
+
+selected_books %>% 
+  filter(publisher == "Viz Media")
+  
+
+```
+
