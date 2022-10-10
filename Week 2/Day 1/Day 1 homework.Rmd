@@ -1,0 +1,142 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(janitor)
+```
+
+
+#Question 1
+
+Read in all 4 credit card transaction datasets and clean column names.
+
+```{r}
+cardbase <- read_csv("cardbase.csv")
+customerbase <- read_csv("customerbase.csv")
+fraudbase <- read_csv("fraudbase.csv")
+transactionbase <- read_csv("transactionbase.csv")
+
+cardbase <- cardbase %>% 
+  clean_names()
+customerbase <- customerbase %>% 
+  clean_names()
+fraudbase <- fraudbase %>% 
+  clean_names()
+transactionbase <- transactionbase %>% 
+  clean_names()
+```
+
+
+#Question 2
+
+Join the data containing card details and customer details by customer id, so that all records of card details and any matching records in customer details are kept. Before you run the code, think about how many rows you expect to see after joining.
+_cardbase and customerbase details, left join on cardbase. 500 obs?_
+
+```{r}
+cardbase %>% 
+  left_join(customerbase, by = c("cust_id" = "cust_id"))
+```
+
+
+
+Question 3
+
+Join the data containing fraud details with transaction details so all rows of both tables are kept. What does the resulting row number tell you?
+_fraud and transaction, full join.That there remain 10000 rows shows all the data in fraud base is contained within the transaction database already_
+
+```{r}
+full_join(fraudbase, transactionbase, by = c("transaction_id"= "transaction_id"))
+```
+
+
+Question 4
+
+Join the data containing card details with transaction details so rows from the first which have matching ones in the second are returned, but only return rows in the first table once.
+
+_Use semi_join to ensure that values in cardbase are only returned once_
+
+```{r}
+semi_join(cardbase, transactionbase, by = c("card_number" = "credit_card_id"))
+```
+
+
+1.2 tidyr
+Question 5
+
+Read in hat_observations and separate observation into two columns, hat_colour and hat_type.
+
+```{r}
+hat_observations <- read_csv("hat_observations.csv")
+hat_observations
+
+hat_observations <- hat_observations %>% 
+  separate(col = observation,
+           into = c("hat_colour", "hat_type"),
+           sep = ",")
+```
+
+
+Question 6
+
+Unite day, month, and year columns into a column called date using a suitable separator. Then find the date where the most berets were observed.
+
+_Converted but left as character for this purpose_
+_9 berets observed on 18/6/2018_
+
+```{r}
+hat_observations %>% 
+  unite(col = "Date",
+        c(day, month, year),
+        sep = "/") %>% 
+  filter(hat_type == "beret") %>%
+  group_by(Date) %>%
+  summarise(total_hat_type = sum(observation_count)) %>% 
+  arrange(desc(total_hat_type))
+
+```
+
+
+
+
+2 Extension
+2.1 Joins
+Question 1
+
+Can you join all 4 datasets together so that you’re left with a dataset that looks like below with 109 rows and 12 columns?
+
+_This is the 109 rows from the fraudbase data, need to left join everything then right join that data_
+
+
+```{r}
+cardbase %>%
+  left_join(customerbase, by = c("cust_id" = "cust_id")) %>% 
+  left_join(transactionbase, by = c("card_number" = "credit_card_id")) %>% 
+  right_join(fraudbase, by = c("transaction_id" = "transaction_id"))
+
+```
+
+
+
+2.2 tidyr
+Question 2
+
+Read in exam_scores and transform it into long format with two new columns exam_question and score. Then, using separate and select, remove superfluous information from the values in exam_question
+
+```{r}
+exam_scores <- read_csv("exam_scores.csv")
+exam_scores
+
+exam_scores %>% 
+  pivot_longer(cols = starts_with("exam"),
+              names_to = "exam_question",
+              values_to = "question_score") %>% 
+  separate(col = "exam_question",
+           into = c("The_word_exam", "question")) %>% 
+  select(-"The_word_exam")
+```
+
+
+
