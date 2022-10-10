@@ -274,7 +274,8 @@ selected_books %>%
 selected_books %>% 
   group_by(publisher) %>%
   summarise(books_published = n()) %>% 
-  filter(books_published >10)
+  filter(books_published >10) %>% 
+  arrange(desc(books_published))
 
 selected_books %>% 
   group_by(publisher) %>%
@@ -282,6 +283,13 @@ selected_books %>%
   filter(books_published >10) %>% 
   summarise(publisher_avg_rating = mean(average_rating)) %>%
   arrange(desc(publisher_avg_rating))
+#example from the homework notes - used different filter criteria
+selected_books %>% 
+  filter(ratings_count >1000) %>% 
+  group_by(publisher) %>%
+  summarise(publisher_avg_rating = mean(average_rating)) %>%
+  arrange(desc(publisher_avg_rating))
+
 
 selected_books %>% 
   filter(publisher == "Viz Media")
