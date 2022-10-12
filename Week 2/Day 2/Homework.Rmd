@@ -4,7 +4,7 @@ output: html_notebook
 ---
 
 ```{r}
-install.packages("rtweet")
+#install.packages("rtweet")
 library(tidyverse)
 library(rtweet)
 library(janitor)
@@ -26,7 +26,7 @@ head(tweets)
 Find the total number of favourites (stored in favorite_count) that CodeClan tweets have got. Don’t add a tweet’s favorite_count to the total when the tweet was quoted (see the is_quote variable).
 _filter out any tweets where is_quote = TRUE. sum favorite_count_
 _There have been 7 tweets which were quotes_
-_These remaining 493 tweets have been favorited a total of 425 times_
+_These remaining 227 tweets have been favorited a total of 425 times_
 
 ```{r}
 tweets %>% 
@@ -53,10 +53,11 @@ _Change NA in media type to text using coalesce_
 _group by media type and count number_of_likes, arranged desc_
 _Photos get more likes than text based tweets_
 ```{r}
+#I did mean instead of sum originally
 tweets %>%
   mutate(media_type = coalesce(media_type, "text")) %>% 
   group_by(media_type) %>% 
-  summarise(number_of_likes = mean(favorite_count)) %>% 
+  summarise(number_of_likes = sum(favorite_count)) %>% 
   arrange(desc(number_of_likes))
 ```
 #Question 5.
@@ -82,16 +83,20 @@ tweets %>%
 #Question 6.
 The code_clan_info.csv data file contains status_url along with other info. Load this in, and join it to the code_clan_tweets tibble, so that you have a status_url for each tweet. Decide which variable to join the tibbles on.
 _join tibbles on the tweet_id column_
-_if all data is unique this should provide 27 + 15 variables (-1 for join variable) = 41
+_if all data is unique this should provide 27 + 15 variables (-1 for join variable) = 41_
 ```{r}
 info <- read_csv("code_clan_info.csv")
 info
 
 full_data <- tweets %>% 
   full_join(info, by = c("tweet_id"))
+tweets %>% 
+  left_join(info, by = c("tweet_id"))
+
+
 full_data
 #check all rows have joined
-15 + 27 -1
+15 + 27 - 1
 ```
 #Question 7.
 From your new joined data, create a new tibble codeclan_hashtags containing only tweet_id and hashtags, then convert hashtags into lowercase for analysis. Keep only those tweets with hashtags.
@@ -101,6 +106,16 @@ code_clan_hashtags <- full_data %>%
   select(tweet_id, hashtags) %>% 
   filter(!is.na(hashtags)) %>% 
   mutate(hashtags = str_to_lower(hashtags))
+
+
+#codeclan answer
+full_data %>% 
+  select(tweet_id, hashtags) %>% 
+  mutate(lower_hashtags = str_to_lower(hashtags)) %>% 
+  select(-hashtags) %>% 
+  drop_na(lower_hashtags)
+
+
 code_clan_hashtags
 ```
 #4 Extensions
@@ -108,9 +123,20 @@ code_clan_hashtags
 Some tweets have more than one hashtag, denoted by the c( symbols at the start of the string. Use the str_sub() and str_detect() functions and your codeclan_hashtags tibble from above to find all the cases in which the hashtag string begins with charactersc(.
 _Use str_detect to find all cases with this, there are 49 in total_
 ```{r}
+#Question 8
+
 code_clan_hashtags %>%
   mutate(hashtags_detect = str_detect(hashtags, "c\\(")) %>% 
   filter(hashtags_detect == TRUE)
+
+code_clan_hashtags %>%
+  mutate(hashtags_detect = str_detect(hashtags, "^c\\(")) %>% 
+  filter(hashtags_detect == TRUE)
+
+
+#CodeClan answer
+code_clan_hashtags %>%
+  filter(str_detect(hashtags, "^c\\("))
 ```
 #Question 9.
 Use the str_detect() function to find all tweets with text that mentions “Edinburgh”, and count how many such tweets there are.
@@ -123,8 +149,19 @@ code_clan_hashtags %>%
 
 code_clan_hashtags %>% 
   mutate(hashtags_lower = str_to_lower(hashtags)) %>% 
-  mutate(hashtags_lower = str_detect(hashtags, "edinburgh")) %>% 
-  filter(hashtags_lower == TRUE)
+  mutate(hashtags_detect = str_detect(hashtags_lower, "edinburgh")) %>% 
+  filter(hashtags_detect == TRUE)
+#my version but for the correct criteria
+full_data %>% 
+  mutate(text = str_to_lower(text)) %>% 
+  mutate(text_lower = str_detect(text, "edinburgh")) %>% 
+  filter(text_lower == TRUE)
+
+#correct answer
+full_data %>% 
+  mutate(text_lower = str_to_lower(text)) %>% 
+  filter(str_detect(text_lower, "edinburgh")) %>% 
+  summarise(count = n())
 ```
 #Question 10.
 Use str_extract_all() with a regular expression to find out which Twitter users CodeClan have been tweeting.
@@ -140,8 +177,11 @@ tweets %>%
 tweets %>% 
   select(text) %>% 
   mutate(user_tweeeted = str_extract_all(text, "@[A-z0-9_]+")) %>% 
-  unnest(cols = c(user_tweeeted))
-#this shows the frequeny at which someone is specifically tweeted
+  unnest(cols = c(user_tweeeted)) %>% 
+  group_by(user_tweeeted) %>% 
+  summarise(count = n()) %>% 
+  arrange(desc(count))
+#this shows the frequency at which someone is specifically tweeted
 tweets %>% 
   select(text) %>% 
   mutate(was_a_user_tweeted = str_detect(text, "@[A-z0-9_]+")) %>% 
