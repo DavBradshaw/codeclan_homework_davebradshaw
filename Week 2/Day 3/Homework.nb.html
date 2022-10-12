@@ -1768,9 +1768,252 @@ pre code {
 
 
 <!-- rnb-text-begin -->
+<p>Programming in R Homework 1 MVP</p>
+<p>#Question 1. Find the weather forecast for the next three days
+online. Create a list of lists in which each inner list should be
+labelled with the name of the day of the week. Each inner list should
+contain named elements telling you the temperature, chance of rain and
+wind speed.</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxud2VhdGhlcl9mb3JlY2FzdFxuXG5gYGAifQ== -->
+<pre class="r"><code>weather_forecast
+</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiJFRodXJzZGF5XG4kVGh1cnNkYXkkdGVtcGVyYXR1cmVcblsxXSBcIjEzwrBcIlxuXG4kVGh1cnNkYXkkY2hhbmNlX29mX3JhaW5cblsxXSBcIjIwJVwiXG5cbiRUaHVyc2RheSR3aW5kX3NwZWVkXG5bMV0gXCIxNVwiXG5cblxuJEZyaWRheVxuJEZyaWRheSR0ZW1wZXJhdHVyZVxuWzFdIFwiMTPCsFwiXG5cbiRGcmlkYXkkY2hhbmNlX29mX3JhaW5cblsxXSBcIjQwJVwiXG5cbiRGcmlkYXkkd2luZF9zcGVlZFxuWzFdIFwiMjJcIlxuXG5cbiRTYXR1cmRheVxuJFNhdHVyZGF5JHRlbXBlcmF0dXJlXG5bMV0gXCIxMsKwXCJcblxuJFNhdHVyZGF5JGNoYW5jZV9vZl9yYWluXG5bMV0gXCI0MCVcIlxuXG4kU2F0dXJkYXkkd2luZF9zcGVlZFxuWzFdIFwiMjZcIlxuIn0= -->
+<pre><code>$Thursday
+$Thursday$temperature
+[1] &quot;13°&quot;
+
+$Thursday$chance_of_rain
+[1] &quot;20%&quot;
+
+$Thursday$wind_speed
+[1] &quot;15&quot;
+
+
+$Friday
+$Friday$temperature
+[1] &quot;13°&quot;
+
+$Friday$chance_of_rain
+[1] &quot;40%&quot;
+
+$Friday$wind_speed
+[1] &quot;22&quot;
+
+
+$Saturday
+$Saturday$temperature
+[1] &quot;12°&quot;
+
+$Saturday$chance_of_rain
+[1] &quot;40%&quot;
+
+$Saturday$wind_speed
+[1] &quot;26&quot;</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>#Question 2. Using the list you’ve just made find:</p>
+<p>The chance of rain tomorrow The wind speed on the day after tomorrow
+The temperature tomorrow.</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxud2VhdGhlcl9mb3JlY2FzdFtbMV1dW1syXV1cbmBgYCJ9 -->
+<pre class="r"><code>weather_forecast[[1]][[2]]</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIFwiMjAlXCJcbiJ9 -->
+<pre><code>[1] &quot;20%&quot;</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxud2VhdGhlcl9mb3JlY2FzdFtbMl1dW1szXV1cbmBgYCJ9 -->
+<pre class="r"><code>weather_forecast[[2]][[3]]</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIFwiMjJcIlxuIn0= -->
+<pre><code>[1] &quot;22&quot;</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxud2VhdGhlcl9mb3JlY2FzdCRGcmlkYXkkdGVtcGVyYXR1cmVcbmBgYCJ9 -->
+<pre class="r"><code>weather_forecast$Friday$temperature</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIFwiMTPCsFwiXG4ifQ== -->
+<pre><code>[1] &quot;13°&quot;</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>#Question 3. Find a 14 day forecast online and create a matrix of the
+forecasts for temperature, where each week is one row and columns
+correspond to days.</p>
+<p>You will want to give a name to the matrix you create.</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxudGVtcGVyYXR1cmVzIDwtIGMoMTMsMTMsMTIsMTMsMTMsMTMsMTMsMTMsMTMsMTIsMTIsMTEsMTEsMTEpXG5cblxudGVtcGVyYXR1cmVfbWF0cml4IDwtICBtYXRyaXgodGVtcGVyYXR1cmVzLCBucm93ID0gMiwgbmNvbCA9IDcsIGJ5cm93ID0gVFJVRSlcbnRlbXBlcmF0dXJlX21hdHJpeFxuYGBgIn0= -->
+<pre class="r"><code>temperatures &lt;- c(13,13,12,13,13,13,13,13,13,12,12,11,11,11)
+
+
+temperature_matrix &lt;-  matrix(temperatures, nrow = 2, ncol = 7, byrow = TRUE)
+temperature_matrix</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiICAgICBbLDFdIFssMl0gWywzXSBbLDRdIFssNV0gWyw2XSBbLDddXG5bMSxdICAgMTMgICAxMyAgIDEyICAgMTMgICAxMyAgIDEzICAgMTNcblsyLF0gICAxMyAgIDEzICAgMTIgICAxMiAgIDExICAgMTEgICAxMVxuIn0= -->
+<pre><code>     [,1] [,2] [,3] [,4] [,5] [,6] [,7]
+[1,]   13   13   12   13   13   13   13
+[2,]   13   13   12   12   11   11   11</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>#Question 4. From the matrix you just made select:</p>
+<p>The third day of the second week The whole second week The first,
+third and fifth days in both weeks.</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxudGVtcGVyYXR1cmVfbWF0cml4WzIsM11cbmBgYCJ9 -->
+<pre class="r"><code>temperature_matrix[2,3]</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIDEyXG4ifQ== -->
+<pre><code>[1] 12</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxudGVtcGVyYXR1cmVfbWF0cml4WzIsXVxuYGBgIn0= -->
+<pre class="r"><code>temperature_matrix[2,]</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIDEzIDEzIDEyIDEyIDExIDExIDExXG4ifQ== -->
+<pre><code>[1] 13 13 12 12 11 11 11</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxudGVtcGVyYXR1cmVfbWF0cml4WywgYygxLDMsNSldXG5gYGAifQ== -->
+<pre class="r"><code>temperature_matrix[, c(1,3,5)]</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiICAgICBbLDFdIFssMl0gWywzXVxuWzEsXSAgIDEzICAgMTIgICAxM1xuWzIsXSAgIDEzICAgMTIgICAxMVxuIn0= -->
+<pre><code>     [,1] [,2] [,3]
+[1,]   13   12   13
+[2,]   13   12   11</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>#Question 5. Write a function that pre-appends “The answer is:” to
+any character input, while for numeric input, it either just returns the
+number for numbers less than 10, or divides the number by 10 for numbers
+greater than 10. For anything else return “Invalid input”.</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY2hhcl9hbmRfbnVtX2Z1bmN0aW9uIDwtIGZ1bmN0aW9uKHgpe1xuICBpZihpcy5jaGFyYWN0ZXIoeCkpe1xuICAgIHBocmFzZSA8LSBwYXN0ZShcIlRoZSBhbnN3ZXIgaXM6XCIsIHgpXG4gICAgcHJpbnQocGhyYXNlKVxuICB9ZWxzZXtcbiAgICBpZih4IDwgMTApe1xuICAgICAgcHJpbnQoeClcbiAgICB9ZWxzZXtcbiAgICAgIGlmKHggPiAxMCl7XG4gICAgICAgIHByaW50KHggLyA1KVxuICAgICAgfWVsc2V7XG4gICAgICAgIFwiSW52YWxpZCBpbnB1dFwiXG4gICAgICB9XG4gICAgfVxuICB9XG59XG5cbmNoYXJfYW5kX251bV9mdW5jdGlvbihcIndvcmRcIilcbmBgYCJ9 -->
+<pre class="r"><code>char_and_num_function &lt;- function(x){
+  if(is.character(x)){
+    phrase &lt;- paste(&quot;The answer is:&quot;, x)
+    print(phrase)
+  }else{
+    if(x &lt; 10){
+      print(x)
+    }else{
+      if(x &gt; 10){
+        print(x / 5)
+      }else{
+        &quot;Invalid input&quot;
+      }
+    }
+  }
+}
+
+char_and_num_function(&quot;word&quot;)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIFwiVGhlIGFuc3dlciBpczogd29yZFwiXG4ifQ== -->
+<pre><code>[1] &quot;The answer is: word&quot;</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY2hhcl9hbmRfbnVtX2Z1bmN0aW9uKDQpXG5gYGAifQ== -->
+<pre class="r"><code>char_and_num_function(4)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIDRcbiJ9 -->
+<pre><code>[1] 4</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY2hhcl9hbmRfbnVtX2Z1bmN0aW9uKDE0KVxuYGBgIn0= -->
+<pre class="r"><code>char_and_num_function(14)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIDIuOFxuIn0= -->
+<pre><code>[1] 2.8</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY2hhcl9hbmRfbnVtX2Z1bmN0aW9uKDEwKVxuYGBgIn0= -->
+<pre class="r"><code>char_and_num_function(10)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIFwiSW52YWxpZCBpbnB1dFwiXG4ifQ== -->
+<pre><code>[1] &quot;Invalid input&quot;</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>#Question 6. Write a function which checks if two vectors have the
+same elements.</p>
+<p>If they have the same elements in the same order, return “Exactly the
+same” If they have the same elements but in a different order, return
+“The same” If they don’t have the same elements, return “Different”.</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxudmVjdG9yXzEgPC0gYygxLDIsMyw0LDUpXG52ZWN0b3JfMiA8LSBjKDEsMiwzLDQsNSlcbnZlY3Rvcl8zIDwtIGMoMyw0LDIsMSw1KVxudmVjdG9yXzQgPC0gYygyMToyNSlcblxuY2hlY2tfdmVjdG9yIDwtIGZ1bmN0aW9uKHgsIHkpe1xuICBpZihcbiAgICBpZGVudGljYWwoeCwgeSkpe1xuICAgICAgcHJpbnQoXCJFeGFjdGx5IHRoZSBzYW1lXCIpXG4gICAgfWVsc2V7XG4gICAgICBzb3J0ZWRfeCA8LSBzb3J0KHgpXG4gICAgICBzb3J0ZWRfeSA8LSBzb3J0KHkpXG4gICAgICBpZihcbiAgICAgICAgaWRlbnRpY2FsKHNvcnRlZF94LCBzb3J0ZWRfeSkpe1xuICAgICAgICBwcmludChcIlRoZSBzYW1lXCIpXG4gICAgICB9ZWxzZXtcbiAgICAgICAgXCJEaWZmZXJlbnRcIlxuICAgICAgfVxuICAgIH1cbn1cblxuXG5cbmNoZWNrX3ZlY3Rvcih2ZWN0b3JfMSwgdmVjdG9yXzIpXG5gYGAifQ== -->
+<pre class="r"><code>vector_1 &lt;- c(1,2,3,4,5)
+vector_2 &lt;- c(1,2,3,4,5)
+vector_3 &lt;- c(3,4,2,1,5)
+vector_4 &lt;- c(21:25)
+
+check_vector &lt;- function(x, y){
+  if(
+    identical(x, y)){
+      print(&quot;Exactly the same&quot;)
+    }else{
+      sorted_x &lt;- sort(x)
+      sorted_y &lt;- sort(y)
+      if(
+        identical(sorted_x, sorted_y)){
+        print(&quot;The same&quot;)
+      }else{
+        &quot;Different&quot;
+      }
+    }
+}
+
+
+
+check_vector(vector_1, vector_2)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIFwiRXhhY3RseSB0aGUgc2FtZVwiXG4ifQ== -->
+<pre><code>[1] &quot;Exactly the same&quot;</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY2hlY2tfdmVjdG9yKHZlY3Rvcl8xLCB2ZWN0b3JfMylcbmBgYCJ9 -->
+<pre class="r"><code>check_vector(vector_1, vector_3)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIFwiVGhlIHNhbWVcIlxuIn0= -->
+<pre><code>[1] &quot;The same&quot;</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY2hlY2tfdmVjdG9yKHZlY3Rvcl8xLCB2ZWN0b3JfNClcbmBgYCJ9 -->
+<pre class="r"><code>check_vector(vector_1, vector_4)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIFwiRGlmZmVyZW50XCJcbiJ9 -->
+<pre><code>[1] &quot;Different&quot;</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>2 Extension</p>
+<p>#Question 7. Write code that prints a multiplication table for
+numbers up to 12. i.e. there will be 12 rows and 12 columns, and each
+element should be the row number multiplied by the column number.</p>
+<p>From: <a href="https://adriann.github.io/programming_problems.html" class="uri">https://adriann.github.io/programming_problems.html</a></p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGF0YV92ZWN0b3IgPC0gbGlzdCgxOjEyKVxubXVsdGlwbGljYXRpb25fdGFibGUgPC0gbWF0cml4KG5yb3cgPSAxMiwgbmNvbCA9IDEyLCBkaW1uYW1lcyA9IGRhdGFfdmVjdG9yLCBkYXRhID0gZGltbmFtZXMoKSlcbmBgYCJ9 -->
+<pre class="r"><code>data_vector &lt;- list(1:12)
+multiplication_table &lt;- matrix(nrow = 12, ncol = 12, dimnames = data_vector, data = dimnames())</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiRXJyb3IgaW4gZGltbmFtZXMoKSA6IDAgYXJndW1lbnRzIHBhc3NlZCB0byAnZGltbmFtZXMnIHdoaWNoIHJlcXVpcmVzIDFcbiJ9 -->
+<pre><code>Error in dimnames() : 0 arguments passed to &#39;dimnames&#39; which requires 1</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>#Question 8. Write a function that takes a vector, and creates a text
+art histogram, like the one below.</p>
+<p>You may want to use the function cat(). This is similar to print(),
+but prints directly, without vector markers. You can also include
+newlines “” when using cat().</p>
+<p>For example, the vector c(1, 2, 3, 4, 5, 1, 3, 4, 5, 1, 3, 4, 4, 3,
+3, 3, 3) should produce the histogram below - the histogram dislpays the
+number of times each number appears in the vector.</p>
+<p>1 | <strong><em> 2 | </em> 3 | </strong>***** 4 | **** 5 | **</p>
 <!-- rnb-text-end -->
 
-<div id="rmd-source-code">LS0tDQp0aXRsZTogIlIgTm90ZWJvb2siDQpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sNCi0tLQ0KDQo=</div>
+<div id="rmd-source-code">LS0tDQp0aXRsZTogIlIgTm90ZWJvb2siDQpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sNCi0tLQ0KDQpQcm9ncmFtbWluZyBpbiBSIEhvbWV3b3JrDQoxIE1WUA0KDQoNCiNRdWVzdGlvbiAxLg0KRmluZCB0aGUgd2VhdGhlciBmb3JlY2FzdCBmb3IgdGhlIG5leHQgdGhyZWUgZGF5cyBvbmxpbmUuIENyZWF0ZSBhIGxpc3Qgb2YgbGlzdHMgaW4gd2hpY2ggZWFjaCBpbm5lciBsaXN0IHNob3VsZCBiZSBsYWJlbGxlZCB3aXRoIHRoZSBuYW1lIG9mIHRoZSBkYXkgb2YgdGhlIHdlZWsuIEVhY2ggaW5uZXIgbGlzdCBzaG91bGQgY29udGFpbiBuYW1lZCBlbGVtZW50cyB0ZWxsaW5nIHlvdSB0aGUgdGVtcGVyYXR1cmUsIGNoYW5jZSBvZiByYWluIGFuZCB3aW5kIHNwZWVkLg0KYGBge3J9DQp3ZWF0aGVyX2ZvcmVjYXN0IDwtIGxpc3QoDQogICJUaHVyc2RheSIgPSBsaXN0KHRlbXBlcmF0dXJlID0gIjEzwrAiLCBjaGFuY2Vfb2ZfcmFpbiA9ICIyMCUiLCB3aW5kX3NwZWVkID0gIjE1IiksDQogICJGcmlkYXkiICAgPSBsaXN0KHRlbXBlcmF0dXJlID0gIjEzwrAiLCBjaGFuY2Vfb2ZfcmFpbiA9ICI0MCUiLCB3aW5kX3NwZWVkID0gIjIyIiksDQogICJTYXR1cmRheSIgPSBsaXN0KHRlbXBlcmF0dXJlID0gIjEywrAiLCBjaGFuY2Vfb2ZfcmFpbiA9ICI0MCUiLCB3aW5kX3NwZWVkID0gIjI2IikNCiAgKQ0Kd2VhdGhlcl9mb3JlY2FzdA0KYGBgDQojUXVlc3Rpb24gMi4NClVzaW5nIHRoZSBsaXN0IHlvdeKAmXZlIGp1c3QgbWFkZSBmaW5kOg0KDQpUaGUgY2hhbmNlIG9mIHJhaW4gdG9tb3Jyb3cNClRoZSB3aW5kIHNwZWVkIG9uIHRoZSBkYXkgYWZ0ZXIgdG9tb3Jyb3cNClRoZSB0ZW1wZXJhdHVyZSB0b21vcnJvdy4NCg0KYGBge3J9DQp3ZWF0aGVyX2ZvcmVjYXN0W1sxXV1bWzJdXQ0Kd2VhdGhlcl9mb3JlY2FzdFtbMl1dW1szXV0NCndlYXRoZXJfZm9yZWNhc3QkRnJpZGF5JHRlbXBlcmF0dXJlDQpgYGANCiNRdWVzdGlvbiAzLg0KRmluZCBhIDE0IGRheSBmb3JlY2FzdCBvbmxpbmUgYW5kIGNyZWF0ZSBhIG1hdHJpeCBvZiB0aGUgZm9yZWNhc3RzIGZvciB0ZW1wZXJhdHVyZSwgd2hlcmUgZWFjaCB3ZWVrIGlzIG9uZSByb3cgYW5kIGNvbHVtbnMgY29ycmVzcG9uZCB0byBkYXlzLg0KDQpZb3Ugd2lsbCB3YW50IHRvIGdpdmUgYSBuYW1lIHRvIHRoZSBtYXRyaXggeW91IGNyZWF0ZS4NCmBgYHtyfQ0KdGVtcGVyYXR1cmVzIDwtIGMoMTMsMTMsMTIsMTMsMTMsMTMsMTMsMTMsMTMsMTIsMTIsMTEsMTEsMTEpDQoNCg0KdGVtcGVyYXR1cmVfbWF0cml4IDwtICBtYXRyaXgodGVtcGVyYXR1cmVzLCBucm93ID0gMiwgbmNvbCA9IDcsIGJ5cm93ID0gVFJVRSkNCnRlbXBlcmF0dXJlX21hdHJpeA0KYGBgDQojUXVlc3Rpb24gNC4NCkZyb20gdGhlIG1hdHJpeCB5b3UganVzdCBtYWRlIHNlbGVjdDoNCg0KVGhlIHRoaXJkIGRheSBvZiB0aGUgc2Vjb25kIHdlZWsNClRoZSB3aG9sZSBzZWNvbmQgd2Vlaw0KVGhlIGZpcnN0LCB0aGlyZCBhbmQgZmlmdGggZGF5cyBpbiBib3RoIHdlZWtzLg0KYGBge3J9DQp0ZW1wZXJhdHVyZV9tYXRyaXhbMiwzXQ0KdGVtcGVyYXR1cmVfbWF0cml4WzIsXQ0KdGVtcGVyYXR1cmVfbWF0cml4WywgYygxLDMsNSldDQpgYGANCiNRdWVzdGlvbiA1Lg0KV3JpdGUgYSBmdW5jdGlvbiB0aGF0IHByZS1hcHBlbmRzIOKAnFRoZSBhbnN3ZXIgaXM64oCdIHRvIGFueSBjaGFyYWN0ZXIgaW5wdXQsIHdoaWxlIGZvciBudW1lcmljIGlucHV0LCBpdCBlaXRoZXIganVzdCByZXR1cm5zIHRoZSBudW1iZXIgZm9yIG51bWJlcnMgbGVzcyB0aGFuIDEwLCBvciBkaXZpZGVzIHRoZSBudW1iZXIgYnkgMTAgZm9yIG51bWJlcnMgZ3JlYXRlciB0aGFuIDEwLiBGb3IgYW55dGhpbmcgZWxzZSByZXR1cm4g4oCcSW52YWxpZCBpbnB1dOKAnS4NCmBgYHtyfQ0KY2hhcl9hbmRfbnVtX2Z1bmN0aW9uIDwtIGZ1bmN0aW9uKHgpew0KICBpZihpcy5jaGFyYWN0ZXIoeCkpew0KICAgIHBocmFzZSA8LSBwYXN0ZSgiVGhlIGFuc3dlciBpczoiLCB4KQ0KICAgIHByaW50KHBocmFzZSkNCiAgfWVsc2V7DQogICAgaWYoeCA8IDEwKXsNCiAgICAgIHByaW50KHgpDQogICAgfWVsc2V7DQogICAgICBpZih4ID4gMTApew0KICAgICAgICBwcmludCh4IC8gNSkNCiAgICAgIH1lbHNlew0KICAgICAgICAiSW52YWxpZCBpbnB1dCINCiAgICAgIH0NCiAgICB9DQogIH0NCn0NCmNoYXJfYW5kX251bV9mdW5jdGlvbigid29yZCIpDQpjaGFyX2FuZF9udW1fZnVuY3Rpb24oNCkNCmNoYXJfYW5kX251bV9mdW5jdGlvbigxNCkNCmNoYXJfYW5kX251bV9mdW5jdGlvbigxMCkNCg0KYGBgDQojUXVlc3Rpb24gNi4NCldyaXRlIGEgZnVuY3Rpb24gd2hpY2ggY2hlY2tzIGlmIHR3byB2ZWN0b3JzIGhhdmUgdGhlIHNhbWUgZWxlbWVudHMuDQoNCklmIHRoZXkgaGF2ZSB0aGUgc2FtZSBlbGVtZW50cyBpbiB0aGUgc2FtZSBvcmRlciwgcmV0dXJuIOKAnEV4YWN0bHkgdGhlIHNhbWXigJ0NCklmIHRoZXkgaGF2ZSB0aGUgc2FtZSBlbGVtZW50cyBidXQgaW4gYSBkaWZmZXJlbnQgb3JkZXIsIHJldHVybiDigJxUaGUgc2FtZeKAnQ0KSWYgdGhleSBkb27igJl0IGhhdmUgdGhlIHNhbWUgZWxlbWVudHMsIHJldHVybiDigJxEaWZmZXJlbnTigJ0uDQpgYGB7cn0NCnZlY3Rvcl8xIDwtIGMoMSwyLDMsNCw1KQ0KdmVjdG9yXzIgPC0gYygxLDIsMyw0LDUpDQp2ZWN0b3JfMyA8LSBjKDMsNCwyLDEsNSkNCnZlY3Rvcl80IDwtIGMoMjE6MjUpDQoNCmNoZWNrX3ZlY3RvciA8LSBmdW5jdGlvbih4LCB5KXsNCiAgaWYoDQogICAgaWRlbnRpY2FsKHgsIHkpKXsNCiAgICAgIHByaW50KCJFeGFjdGx5IHRoZSBzYW1lIikNCiAgICB9ZWxzZXsNCiAgICAgIHNvcnRlZF94IDwtIHNvcnQoeCkNCiAgICAgIHNvcnRlZF95IDwtIHNvcnQoeSkNCiAgICAgIGlmKA0KICAgICAgICBpZGVudGljYWwoc29ydGVkX3gsIHNvcnRlZF95KSl7DQogICAgICAgIHByaW50KCJUaGUgc2FtZSIpDQogICAgICB9ZWxzZXsNCiAgICAgICAgIkRpZmZlcmVudCINCiAgICAgIH0NCiAgICB9DQp9DQpjaGVja192ZWN0b3IodmVjdG9yXzEsIHZlY3Rvcl8yKQ0KY2hlY2tfdmVjdG9yKHZlY3Rvcl8xLCB2ZWN0b3JfMykNCmNoZWNrX3ZlY3Rvcih2ZWN0b3JfMSwgdmVjdG9yXzQpDQpgYGANCjIgRXh0ZW5zaW9uDQoNCg0KI1F1ZXN0aW9uIDcuDQpXcml0ZSBjb2RlIHRoYXQgcHJpbnRzIGEgbXVsdGlwbGljYXRpb24gdGFibGUgZm9yIG51bWJlcnMgdXAgdG8gMTIuIGkuZS4gdGhlcmUgd2lsbCBiZSAxMiByb3dzIGFuZCAxMiBjb2x1bW5zLCBhbmQgZWFjaCBlbGVtZW50IHNob3VsZCBiZSB0aGUgcm93IG51bWJlciBtdWx0aXBsaWVkIGJ5IHRoZSBjb2x1bW4gbnVtYmVyLg0KDQpGcm9tOiBodHRwczovL2Fkcmlhbm4uZ2l0aHViLmlvL3Byb2dyYW1taW5nX3Byb2JsZW1zLmh0bWwNCmBgYHtyfQ0KZGF0YV92ZWN0b3IgPC0gbGlzdCgxOjEyKQ0KbXVsdGlwbGljYXRpb25fdGFibGUgPC0gbWF0cml4KG5yb3cgPSAxMiwgbmNvbCA9IDEyLCBkaW1uYW1lcyA9IGRhdGFfdmVjdG9yLCBkYXRhID0gZGltbmFtZXMoKSkNCm11bHRpcGxpY2F0aW9uX3RhYmxlDQoNCg0KYGBgDQoNCg0KDQojUXVlc3Rpb24gOC4NCldyaXRlIGEgZnVuY3Rpb24gdGhhdCB0YWtlcyBhIHZlY3RvciwgYW5kIGNyZWF0ZXMgYSB0ZXh0IGFydCBoaXN0b2dyYW0sIGxpa2UgdGhlIG9uZSBiZWxvdy4NCg0KWW91IG1heSB3YW50IHRvIHVzZSB0aGUgZnVuY3Rpb24gY2F0KCkuIFRoaXMgaXMgc2ltaWxhciB0byBwcmludCgpLCBidXQgcHJpbnRzIGRpcmVjdGx5LCB3aXRob3V0IHZlY3RvciBtYXJrZXJzLiBZb3UgY2FuIGFsc28gaW5jbHVkZSBuZXdsaW5lcyAiXG4iIHdoZW4gdXNpbmcgY2F0KCkuDQoNCkZvciBleGFtcGxlLCB0aGUgdmVjdG9yIGMoMSwgMiwgMywgNCwgNSwgMSwgMywgNCwgNSwgMSwgMywgNCwgNCwgMywgMywgMywgMykgc2hvdWxkIHByb2R1Y2UgdGhlIGhpc3RvZ3JhbSBiZWxvdyAtIHRoZSBoaXN0b2dyYW0gZGlzbHBheXMgdGhlIG51bWJlciBvZiB0aW1lcyBlYWNoIG51bWJlciBhcHBlYXJzIGluIHRoZSB2ZWN0b3IuDQoNCjEgfCAqKioNCjIgfCAqDQozIHwgKioqKioqKg0KNCB8ICoqKioNCjUgfCAqKg0K</div>
 
 
 
