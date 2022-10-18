@@ -47,7 +47,7 @@ FROM employees AS e
 INNER JOIN pay_details AS p 
 ON e.pay_detail_id = p.id 
 WHERE p.local_account_no IS NOT NULL AND 
-      p.local_sort_code IS NOT NULL
+      p.local_sort_code IS NOT NULL;
       
 --(b). Amend your query above to also return the name of the team that each employee belongs to.
 SELECT
@@ -61,7 +61,7 @@ ON e.pay_detail_id = p.id
 INNER JOIN teams AS t 
 ON e.team_id = t.id 
 WHERE p.local_account_no IS NOT NULL AND 
-      p.local_sort_code IS NOT NULL
+      p.local_sort_code IS NOT NULL;
 
 --Question 3.
 --(a). Make a table, which has each employee id along with the team that employee belongs to.
@@ -72,7 +72,7 @@ t.name AS team_name
 FROM employees AS e
 INNER JOIN teams AS t 
 ON e.team_id = t.id
-ORDER BY employee_ID
+ORDER BY employee_ID;
       
 --(b). Breakdown the number of employees in each of the teams.
 
@@ -82,7 +82,7 @@ count(e.id)
 FROM employees AS e
 INNER JOIN teams AS t 
 ON e.team_id = t.id
-GROUP BY t."name" 
+GROUP BY t."name"; 
 
 --(c). Order the table above by so that the teams with the least employees come first.
 
@@ -93,7 +93,7 @@ FROM employees AS e
 INNER JOIN teams AS t 
 ON e.team_id = t.id
 GROUP BY t."name" 
-ORDER BY employees_in_department
+ORDER BY employees_in_department;
 
 
 
@@ -107,7 +107,7 @@ count(t.id) AS number_of_employees
 FROM employees AS e
 INNER JOIN teams AS t 
 ON e.team_id = t.id 
-GROUP BY t.id 
+GROUP BY t.id; 
 
 --(b). The total_day_charge of a team is defined as the charge_cost of the team multiplied by the number of employees in the team. Calculate the total_day_charge for each team.
 
@@ -118,7 +118,7 @@ t.name AS team_name,
 FROM employees AS e
 INNER JOIN teams AS t 
 ON e.team_id = t.id 
-GROUP BY t.id 
+GROUP BY t.id; 
 
 --(c). How would you amend your query from above to show only those teams with a total_day_charge greater than 5000?
 
@@ -130,7 +130,7 @@ FROM employees AS e
 INNER JOIN teams AS t 
 ON e.team_id = t.id
 GROUP BY t.id
-HAVING (count(t.id)) * CAST(t.charge_cost AS INT) >5000
+HAVING (count(t.id)) * CAST(t.charge_cost AS INT) >5000;
 
 
 --2 Extension
@@ -140,7 +140,7 @@ HAVING (count(t.id)) * CAST(t.charge_cost AS INT) >5000
 --How many of the employees serve on one or more committees?
 SELECT
 DISTINCT (employee_id)
-FROM employees_committees 
+FROM employees_committees; 
 --There are 22 distinct
 
 SELECT
@@ -149,15 +149,14 @@ count(employee_id) AS commitees_served_on
 FROM employees_committees 
 GROUP BY employee_id
 ORDER BY commitees_served_on DESC
-LIMIT 2
+LIMIT 2;
 
 
 --Question 6.
 --How many of the employees do not serve on a committee?
---The answer is 978 who employees who provide NULL value for comittee when joining
+--The answer is 978 employees who provide NULL value for comittee when joining
 SELECT 
 sum(CASE WHEN ec.committee_id IS NULL THEN 1 ELSE 0 end) AS employee_not_on_committee
 FROM employees AS e
 LEFT JOIN employees_committees AS ec 
-ON e.id = ec.employee_id
-WHERE ec.committee_id  IS NULL
+ON e.id = ec.employee_id;
