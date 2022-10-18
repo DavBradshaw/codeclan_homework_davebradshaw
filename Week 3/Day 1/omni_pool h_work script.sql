@@ -83,7 +83,7 @@ ORDER BY salary;
 SELECT count(*) AS employees_beginning_with_F
 FROM employees 
 WHERE first_name LIKE 'F%';
---There are 30 employees whose first name begins with an F.
+--There are 30 employees whose first name begins with an F. v
 
 --Question 12.
 --Find all the details of any employees with a ‘yahoo’ email address?
@@ -122,6 +122,18 @@ SELECT
     concat(salary * fte_hours) AS effective_yearly_salary
 FROM employees 
 --Table created with new column
+--Question 15+
+
+SELECT 
+    first_name, 
+    last_name, 
+    fte_hours, 
+    salary,
+    (salary * fte_hours) AS effective_yearly_salary
+FROM employees
+WHERE fte_hours * salary >= 35000;
+
+
 
 --Question 16.
 --The corporation wants to make name badges for a forthcoming conference.
@@ -155,6 +167,27 @@ SELECT
     ')') AS badge_label
 FROM employees 
 WHERE start_date IS NOT NULL;
+
+--Get month as well - review session
+SELECT
+    first_name,
+    last_name,
+    department,
+    start_date,
+    concat(
+    first_name,
+    ' ',
+    last_name,
+    ' - ',
+    department,
+    ' (joined ',
+    TO_CHAR(start_date, 'FMMonth'),
+    ' ',
+    EXTRACT (YEAR FROM start_date),
+    ')') AS badge_label
+FROM employees 
+WHERE start_date IS NOT NULL;
+
 
 --Table created and is not null filtered out 74 rows.
 
