@@ -140,7 +140,7 @@ HAVING (count(t.id)) * CAST(t.charge_cost AS INT) >5000;
 --How many of the employees serve on one or more committees?
 SELECT
 DISTINCT (employee_id)
-FROM employees_committees; 
+FROM employees_committees;
 --There are 22 distinct
 
 SELECT
@@ -150,6 +150,8 @@ FROM employees_committees
 GROUP BY employee_id
 ORDER BY commitees_served_on DESC
 LIMIT 2;
+--Review - answered the wrong question, read it as how many serve on more than one committee.
+--Answered who serves on more than one committee
 
 
 --Question 6.
@@ -158,5 +160,6 @@ LIMIT 2;
 SELECT 
 sum(CASE WHEN ec.committee_id IS NULL THEN 1 ELSE 0 end) AS employee_not_on_committee
 FROM employees AS e
-LEFT JOIN employees_committees AS ec 
+LEFT JOIN employees_committees AS ec
 ON e.id = ec.employee_id;
+
