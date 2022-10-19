@@ -337,13 +337,36 @@ Another solution might involve combining a subquery with window
 functions
 */
 
+WITH dept_count AS(
+    SELECT
+    department,
+    count(*) AS count
+    FROM employees 
+    GROUP BY department),
+    max_dept_count AS (
+    SELECT MAX(count) AS max_count
+    FROM dept_count),
+    biggest_dept AS (
+        SELECT
+        department
+        FROM dept_count
+        WHERE count = (
+        SELECT
+        max_count
+        FROM max_dept_count))
 SELECT 
-count(department), 
-department 
+id,
+first_name,
+last_name,
+department,
+salary,
+fte_hours,
+salary / (AVG(salary) OVER (PARTITION BY department)) AS salary_to_average,
+fte_hours / (AVG(fte_hours) OVER (PARTITION BY department)) AS fte_to_average
 FROM employees 
-GROUP BY department 
-ORDER BY count
--- Training and support have the same value - 81
+WHERE department IN ('Training', 'Support')
+
+-- Training and support have the same value - 81, if it select only them as above it returns both so I believe this worked
 
 /*Question 2.
 Have a look again at your table for MVP question 6. It will 
@@ -366,12 +389,38 @@ boolean_column into text 'true', FALSE to text 'false', a
 nd will leave NULLs as NULL
 */
 
+SELECT
+CASE 
+    WHEN pension_enrol IS NULL THEN 'UNKNOWN'
+    WHEN pension_enrol = FALSE THEN 'FALSE'
+    ELSE 'TRUE'
+    END AS pension_enrol,
+count(CASE 
+    WHEN pension_enrol IS NULL THEN 'UNKNOWN'
+    WHEN pension_enrol = FALSE THEN 'FALSE'
+    ELSE 'TRUE'
+    END) AS pension_enrol
+FROM employees 
+GROUP BY pension_enrol;
+
 /*Question 3. Find the first name, last name, email address 
  * and start date of all the employees who are members of the 
  * ‘Equality and Diversity’ committee. Order the member employees by 
  * their length of service in the company, longest first.
 */
 
+SELECT
+e.first_name,
+e.last_name ,
+e.email ,
+e.start_date 
+FROM employees AS e
+INNER JOIN employees_committees  AS ec 
+ON e.id = ec.employee_id
+INNER JOIN committees AS c
+ON ec.committee_id =c.id 
+WHERE c."name" = 'Equality and Diversity'
+ORDER BY start_date; 
 
 /*Question 4. [Tough!]
 Use a CASE() operator to group employees who are members 
@@ -385,3 +434,27 @@ You likely want to count DISTINCT() employees in each salary_class
 
 You will need to GROUP BY salary_class
 */.
+
+SELECT
+            CASE 
+            WHEN salary IS NULL THEN 'none'
+            WHEN salary <40000 THEN 'low'
+            ELSE 'high'
+            END AS Salary_class
+            FROM employees
+            
+
+SELECT
+            CASE 
+            WHEN salary IS NULL THEN 'none'
+            WHEN salary <40000 THEN 'low'
+            ELSE 'high'
+            END AS Salary_class,
+            count(*) AS total            
+            FROM employees
+            GROUP BY
+            CASE 
+            WHEN salary IS NULL THEN 'none'
+            WHEN salary <40000 THEN 'low'
+            ELSE 'high'
+            END
