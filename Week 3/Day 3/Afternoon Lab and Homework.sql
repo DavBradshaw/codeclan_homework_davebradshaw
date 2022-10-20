@@ -74,9 +74,11 @@ Provide a breakdown of the numbers of employees enrolled,
 
 SELECT 
 pension_enrol AS pension_enrol_status, 
-count(pension_enrol) AS number_of_employees
+count(id) AS number_of_employees
 FROM employees 
 GROUP BY pension_enrol;
+
+--had count(pension_enrol) instead of count(id) which did not return the null values for the table
 
 /*Question 7.
 Obtain the details for the employee with the highest salary in the 
@@ -86,8 +88,10 @@ Obtain the details for the employee with the highest salary in the
 SELECT *
 FROM employees 
 WHERE pension_enrol IS FALSE AND department = 'Accounting'
-ORDER BY salary DESC 
-LIMIT 1
+ORDER BY salary DESC NULLS last
+LIMIT 1;
+
+--Missed NULLS LAST when completing homework, added on review
 
 /*Question 8.
 Get a table of country, number of employees in that country,
@@ -156,6 +160,8 @@ LEFT JOIN pay_details AS p
 ON e.id = p.id
 WHERE p.local_tax_code IS NULL;
 
+--Got lucky that e.id and e.pay_details are the same value, forgot to select only names
+
 /*Question 12.
 The expected_profit of an employee is defined as 
 (48 * 35 * charge_cost - salary) * fte_hours, where charge_cost 
@@ -177,7 +183,9 @@ last_name,
 FROM employees AS e
 LEFT JOIN teams AS t 
 ON e.team_id = t.id
-ORDER BY expected_profit desc;
+ORDER BY expected_profit DESC NULLS LAST ;
+
+--Add NULLS LAST to order by function
 
 /*Question 13. [Tough]
 Find the first_name, last_name and salary of the lowest paid
@@ -205,7 +213,7 @@ WHERE country = 'Japan' AND fte_hours IN (
 ORDER BY salary
 LIMIT 1;
 
-
+--
 
 
 /*Question 14.
@@ -270,9 +278,6 @@ FROM employees
 GROUP BY department
 ORDER BY department; 
 
-
-
-
 /*2 Extension
 Some of these problems may need you to do some online research on 
 SQL statements we haven’t seen in the lessons up until now… 
@@ -294,6 +299,9 @@ Get a list of the id, first_name, last_name, department, salary
    that department’s average salary, and each employee’s fte_hours
     to that department’s average fte_hours.
 */
+
+
+
 
 WITH dept_count AS(
     SELECT
@@ -403,6 +411,17 @@ count(CASE
 FROM employees 
 GROUP BY pension_enrol;
 
+--Below after review, did not need case when again as things were already sorted into the same pots, just with different names
+SELECT
+CASE 
+    WHEN pension_enrol IS NULL THEN 'UNKNOWN'
+    WHEN pension_enrol = FALSE THEN 'FALSE'
+    ELSE 'TRUE'
+    END AS pension_enrol,
+count(id) AS enrolled
+FROM employees 
+GROUP BY pension_enrol;
+
 /*Question 3. Find the first name, last name, email address 
  * and start date of all the employees who are members of the 
  * ‘Equality and Diversity’ committee. Order the member employees by 
@@ -458,3 +477,5 @@ SELECT
             WHEN salary <40000 THEN 'low'
             ELSE 'high'
             END
+            
+--answered as total employees not by those on committee
