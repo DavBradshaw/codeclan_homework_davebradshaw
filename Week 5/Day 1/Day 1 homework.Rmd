@@ -60,12 +60,11 @@ Make a line chart showing monthly sales of the “flagship product” - the ‘K
 monthly_sales %>% 
   filter(cashflow == "Kwikbit Unit 1 Sales") %>% 
   ggplot(aes(x = date, y = amount))+
-  geom_line()+
+  geom_line(colour = col_scheme[1])+
   labs(title = "Monthly sales of Kwikbit Unit 1")+
-  scale_fill_manual(values = col_scheme)+
   my_theme
 
-
+#got the colour after answers pushed
 ```
 
 Question 3.
@@ -117,7 +116,7 @@ Now show the sales from the four competitors as a line graph. Include an extra l
 ```{r}
 
 competitors %>% 
-  ggplot(aes(x = year, y = revenue, group = company))+
+  ggplot(aes(x = year, y = revenue, colour = company))+
   geom_line()+
   geom_point()+
   labs(title = "Annual revenue of competitors")+
@@ -136,12 +135,23 @@ device_data
 
 device_data %>% 
   mutate(time = hours+(mins/60)) %>% 
-  ggplot(aes(x = time, y = counts))+
+  ggplot(aes(x = time, y = counts, colour = device))+
   geom_line()+
   labs(title = "Steps tracked by device and person")+
   facet_wrap(~id + device, ncol = 4)+
   scale_fill_manual(values = col_scheme)+
   my_theme
+
+#answer from answers - grid better than wrap just for leaving more vertical room
+device_data %>% 
+  mutate(time = hours+(mins/60)) %>% 
+  ggplot(aes(x = time, y = counts))+
+  geom_line()+
+  labs(title = "Steps tracked by device and person")+
+  facet_grid(id ~ device)+
+  scale_fill_manual(values = col_scheme)+
+  my_theme
+
 
 ```
 
