@@ -219,7 +219,7 @@ backpack %>%
 backpack %>% 
     mutate(back_problems = recode(back_problems, "1" = "yes", "0" = "no")) %>% 
   ggplot(aes(x = body_weight, y = backpack_weight))+
-  geom_line()+
+  geom_point()+
   facet_grid(back_problems ~ sex)
 
 

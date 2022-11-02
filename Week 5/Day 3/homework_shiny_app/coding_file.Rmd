@@ -1,0 +1,112 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+library(tidyverse)
+```
+
+
+
+```{r}
+milk <- CodeClanData::milk
+beer <- CodeClanData::beer
+whisky <- CodeClanData::whisky
+```
+
+```{r}
+milk
+
+pivoted_milk <- milk %>% 
+  pivot_longer(-name, names_to = "component", values_to = "percentage")
+pivoted_milk
+
+pivoted_milk %>%
+  filter(name == "Horse") %>% 
+  ggplot(aes(x = component, y = percentage)) +
+  geom_col()
+
+
+pivoted_milk %>% 
+  distinct(name) %>% 
+  arrange(name) %>% 
+  pull()
+
+
+
+  
+```
+
+```{r}
+beer
+
+beer_names <- beer %>% 
+  distinct(brand) %>% 
+  arrange(brand) %>% 
+  pull()
+
+beer_cal_numeric <- beer %>% 
+  mutate(calories = as.numeric(calories))
+
+beer %>% 
+  mutate(label_text = ifelse(brand == "Dragon Stout", "Dragon Stout", NA)) %>% 
+  ggplot(aes(x = percent, y = calories, fill = brand == "Dragon Stout"))+
+  geom_point()+
+  geom_text(aes(label = label_text))+
+  scale_fill_manual(values = c("grey40", "firebrick"), guide = "none")+
+  labs(title = "Beer calories and % alcohol",
+       x = "% Alcohol",
+       y = "Calorise")
+
+beer %>% 
+  mutate(label_text = ifelse(brand == "Dragon Stout", "Dragon Stout", NA)) %>% 
+  ggplot(aes(x = percent,
+             y = calories,
+             fill = brand == "Dragon Stout"))+
+  geom_point()+
+  geom_text(aes(label = label_text))+
+  scale_fill_manual(values = c("grey40", "firebrick"), guide = "none")+
+  labs(title = "Beer calories and % alcohol",
+       x = "% Alcohol",
+       y = "Calorise")
+
+
+```
+
+```{r}
+#code I'm hiding from the app
+
+
+
+
+
+
+  # ,
+  # output$beer_plot <- renderPlot(
+  # beer %>% 
+  #   mutate(label_text = ifelse(brand == "beer", "beer", NA)) %>% 
+  #   ggplot(aes(x = percent,
+  #              y = calories,
+  #              fill = brand == "beer"))+
+  #   geom_point()+
+  #   geom_text(aes(label = label_text))+
+  #   scale_fill_manual(values = c("grey40", "firebrick"), guide = "none")+
+  #   labs(title = "Beer calories and % alcohol",
+  #        x = "% Alcohol",
+  #        y = "Calorise")
+  # )
+
+
+
+
+
+             # sidebarLayout(
+             #   sidebarPanel(
+             #     selectInput(inputId = "beer",
+             #                 label = "Which beer would you like?",
+             #                 choices = c(beer_names)
+             #   )
+             # ),
+             # mainPanel(plotOutput("beer_plot")))
+```
+
