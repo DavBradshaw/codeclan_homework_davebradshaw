@@ -216,9 +216,27 @@ backpack %>%
        x = "Body weight (kg)",
        y = "Backpack weight (kg)")
 
+backpack %>% 
+    mutate(back_problems = recode(back_problems, "1" = "yes", "0" = "no")) %>% 
+  ggplot(aes(x = body_weight, y = backpack_weight))+
+  geom_line()+
+  facet_grid(back_problems ~ sex)
+
+
+backpack %>% 
+    mutate(back_problems = recode(back_problems, "1" = "yes", "0" = "no")) %>% 
+  ggplot(aes(x = ratio, y = back_problems))+
+  geom_boxplot()
+
+
+backpack %>% 
+    mutate(back_problems = recode(back_problems, "1" = "yes", "0" = "no")) %>% 
+  ggplot(aes(x = ratio, y = back_problems))+
+  geom_boxplot()+
+  facet_grid(~ sex)
 
 ```
-
+Boxplot data shows that both males and females who have back problems have a higher ratio of backpack weight to bodyweight than those without. This is more visible when not separating by gender.
 
 3 Extensions
 
@@ -257,7 +275,25 @@ Is there a difference between how heavy the bags those in different years carry?
 
 ```{r}
 
+backpack %>% 
+  filter(year !=0) %>% 
+  ggplot(aes(x = year, y = backpack_weight))+
+  geom_point()+
+      labs(title = "Backpack weight of students in each year",
+       x = "Year",
+       y = "Backpack weight")
+
+
+backpack %>% 
+  filter(year !=0) %>% 
+  ggplot(aes(x = backpack_weight))+
+  geom_histogram()+
+      labs(title = "Backpack weight of students in each year",
+       x = "Backpack weight",
+       y = "Freqency")+
+  facet_wrap(~year)
+
 
 ```
 
-
+Scatter graph shows there is no real trend on which year is most likely to have a heavy backpack. Hard to take anything from year 6 with only 5 data points though this does look the lowest.
