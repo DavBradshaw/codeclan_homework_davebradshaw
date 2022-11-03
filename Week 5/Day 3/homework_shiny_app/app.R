@@ -19,17 +19,11 @@ ui <- fluidPage(
       selectInput(inputId = "animal",
                   label = "Which animals milk would you like?",
                   choices = c(milk_animals)
-                  
       )
     ),
     mainPanel(plotOutput("milk_plot"))
-  )
-  
-  
+  ) 
 )
-  
-  
-
 
 server <- function(input, output) {
   output$milk_plot <- renderPlot(
