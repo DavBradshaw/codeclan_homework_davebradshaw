@@ -1,0 +1,96 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+library(tidyverse)
+```
+
+```{r}
+games_data <- CodeClanData::game_sales
+games_data
+#things to sort by
+#choice
+platforms <- games_data %>% 
+  distinct(platform) %>% 
+  arrange(platform) %>% 
+  pull()
+platforms
+#slider to select year range
+year <- games_data %>% 
+  distinct(year_of_release) %>% 
+  arrange(year_of_release) %>% 
+  pull()
+year
+#choice
+genre <- games_data %>% 
+  distinct(genre) %>% 
+  arrange(genre) %>% 
+  pull()
+genre
+
+```
+
+```{r}
+#tables and plot - ratings and sales
+
+year_genre_platform <- 
+  CodeClanData::game_sales %>% 
+  filter(genre == input$genre,
+         year_of_release == input$year,
+         platform == input$platform)
+
+#This will form the reactive part of the tab.
+  
+year_genre_platform() %>% 
+  select(name, user_score, critic_score, sales, rating, developer)
+
+#This will display the data shown in the plots as well as additional information on the rating and developer.
+
+
+year_genre_platform() %>% 
+  ggplot()+
+  geom_col(aes(y = sales, x = name, fill = name), show.legend = FALSE)+
+  labs(x = "Game Title",
+       y = "Sales on this patform (millions)")+
+  coord_flip()+
+  scale_fill_brewer(palette = "Pastel1")
+
+#This will show the most sold games in that year/genre/platform.
+
+
+year_genre_platform() %>% 
+  ggplot()+
+  geom_col(aes(y = user_score, x = name, fill = name), show.legend = FALSE)+
+  labs(x = "Game Title",
+       y = "Average user score (out of 10")+
+  coord_flip()+
+  scale_fill_brewer(palette = "Pastel1")
+#This will show the user reviews of games in that year/genre/platform.
+
+
+year_genre_platform() %>% 
+  ggplot()+
+  geom_col(aes(y = critic_score, x = name, fill = name), show.legend = FALSE)+
+  labs(x = "Game Title",
+       y = "Average critic score (out of 100)")+
+  coord_flip()+
+  scale_fill_brewer(palette = "Pastel1")
+
+#This will show the critically reviews games in that year/genre/platform.
+
+#The idea behind showing the data in these three formats was that the user could decide what factors mattered most to them when deciding what game they might purchase given the criteria they have chosen. Showing all three may help them make decisions when factors are close and visuals may be more beneficial than a table for this (particularly in years with lots of games).
+
+```
+Exact 
+```{r}
+CodeClanData::game_sales %>% 
+  arrange(desc(sales)) %>% 
+  group_by(genre) %>% 
+  filter(user_score == max(user_score))
+
+
+
+
+```
+
