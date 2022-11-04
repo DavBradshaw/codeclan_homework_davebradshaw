@@ -4,6 +4,10 @@ output: html_notebook
 ---
 ```{r}
 library(tidyverse)
+library(RColorBrewer)
+library(png)
+library(ggpubr)
+library(jpeg)
 ```
 
 ```{r}
@@ -30,7 +34,7 @@ genre <- games_data %>%
 genre
 
 ```
-
+Note - assumption made that all sales data is in millions.
 ```{r}
 #tables and plot - ratings and sales
 
@@ -82,14 +86,84 @@ year_genre_platform() %>%
 #The idea behind showing the data in these three formats was that the user could decide what factors mattered most to them when deciding what game they might purchase given the criteria they have chosen. Showing all three may help them make decisions when factors are close and visuals may be more beneficial than a table for this (particularly in years with lots of games).
 
 ```
-Exact 
+Resident Evil
 ```{r}
+#Select only resident evil games
 CodeClanData::game_sales %>% 
-  arrange(desc(sales)) %>% 
-  group_by(genre) %>% 
-  filter(user_score == max(user_score))
+  filter(str_detect(name, "esident"))
+
+#Arrange by year
+resident_evil_by_year <- CodeClanData::game_sales %>% 
+  filter(str_detect(name, "esident")) %>% 
+  group_by(name) %>% 
+  arrange(year_of_release) %>% 
+  distinct(name) %>% 
+  pull(name)
+
+#Store order in data using a factor and create sum columns
+resident_evil <- CodeClanData::game_sales %>% 
+  filter(str_detect(name, "esident")) %>% 
+  mutate(name = factor(name, levels = resident_evil_by_year)) %>% 
+  group_by(name) %>% 
+  mutate(total_sales = sum(sales)) %>% 
+  mutate(average_user_score = mean(user_score)) %>% 
+  mutate(average_critic_score = mean(critic_score)) %>% 
+  distinct(name, total_sales, average_critic_score, average_user_score) %>% 
+  arrange(name)
+resident_evil
+
+img <- readJPEG("Umbrella-Corporation-Logo-720x450.jpg")
+
+resident_evil %>% 
+  ggplot()+
+  background_image(img)+
+  geom_point(aes(x = name, y = average_user_score, size = average_critic_score), colour = "#8a0303", show.legend = FALSE)+
+  coord_flip()+
+  labs(title = "Resident Evil games showing user and critic scores (size of bubble)",
+       y = "Average user score (out of 10) across platforms",
+       x = "Game")
+#This graph will show readers which resident evil games received the best user scores with an acknowledgment to the critic score using the size of the point. It should help them identify the best game as the users of the game have rated it.
+
+#didn't use
+resident_evil %>% 
+  ggplot()+
+  background_image(img)+
+  geom_point(aes(x = name, y = average_critic_score, size = average_user_score), colour = "#8a0303", show.legend = FALSE)+
+  coord_flip()+
+  labs(title = "Resident Evil games showing user and critic scores (size of bubble)",
+       y = "Average user score (out of 10) across platforms",
+       x = "Game")
 
 
+```
+
+```{r}
+#Select only FIFA games
+CodeClanData::game_sales
+
+CodeClanData::game_sales %>% 
+  filter(str_detect(name, "FIFA")) %>% 
+  ggplot()+
+  geom_col(aes(y = name, x = sales, fill = platform), position = "dodge")
+#This graph shows the sales of FIFA games in the chosen year split by the platform to allow the user to see which platform specific games were most popular on
+
+
+fifa_year <- CodeClanData::game_sales %>% 
+  filter(str_detect(name, "FIFA"), year_of_release == 2003)
+#This table shows further detail of FIFA games by the chosen year
+
+fifa_year %>% 
+  select(-year_of_release)
+
+CodeClanData::game_sales %>% 
+  filter(str_detect(name, "FIFA")) %>%
+  group_by(year_of_release) %>% 
+  mutate(sales_in_year = sum(sales))%>% 
+  ggplot()+
+  geom_point(aes(x = year_of_release, y = sales_in_year))+
+  geom_smooth(aes(x = year_of_release, y = sales_in_year), method = loess)
+#This plot shows the total sales of all FIFA games released in a given year. Data shows this appears to have peaked in popularity in 2012/2013 before declining again. It appers not as many people are buying new FIFA games annually as they were a few years ago. 
+#The smooth curve "loess" method was used as the data appears to have peaked and it now declining therefore a straight line would not have been suitable.
 
 
 ```
