@@ -1,6 +1,7 @@
 library(shiny)
 library(tidyverse)
 library(jpeg)
+library(ggpubr)
 
 platforms <- CodeClanData::game_sales %>% 
   distinct(platform) %>% 
@@ -65,7 +66,7 @@ ui <- fluidPage(
              ),
              fluidRow(
                column(6,
-                      "Table showing data for the games selected",
+                      "Table showing data for the games avialable with set filters",
                       tableOutput(outputId = "games_table")),
                
                column(6,
@@ -141,7 +142,8 @@ output$sales_plot <- renderPlot(
       labs(x = "Game Title",
            y = "Average user score (out of 10")+
       coord_flip()+
-      scale_fill_brewer(palette = "Pastel1")
+      scale_fill_brewer(palette = "Pastel1")+
+      ylim(0, 10)
   )
 
     output$critics_plot <- renderPlot(
@@ -151,7 +153,8 @@ output$sales_plot <- renderPlot(
         labs(x = "Game Title",
              y = "Average critic score (out of 100)")+
         coord_flip()+
-        scale_fill_brewer(palette = "Pastel1")
+        scale_fill_brewer(palette = "Pastel1")+
+        ylim(0, 100)
     )
   
     
