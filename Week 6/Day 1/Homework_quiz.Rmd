@@ -1,0 +1,175 @@
+```{r}
+library(tidyverse)
+library(gtools)
+library(janitor)
+source("prob.R")
+```
+
+# Question
+Calculate the conditional probabilities prob(survived∣crew) and prob(survived∣passenger) to settle this dispute.
+
+Have a look at the distinct values of the class variable, this will tell you whether each individual was a passenger (1st, 2nd or 3rd class) or a member of the crew (treat restaurant staff as crew)
+
+```{r}
+titanic <- read_csv("data/titanic.csv")
+titanic %>% 
+  count(class)
+
+new_titanic <- titanic%>% 
+  mutate(pass_crew = if_else(class %in% c("1st", "2nd", "3rd"), "passenger", "crew"))
+
+new_titanic %>% 
+  count(pass_crew, survived)
+```
+```{r}
+#probability for crew to survive - 0.237 (23.7%)
+crew_titanic <- new_titanic %>% 
+  filter(pass_crew == "crew")
+
+crew_survival <- crew_titanic %>% 
+  filter(survived == "yes") %>% 
+  summarise(prob = n()/nrow(crew_titanic))
+crew_survival
+
+
+#probability for passenger to survive - 0.379 (37.9%)
+passenger_titanic <- new_titanic %>% 
+  filter(pass_crew == "passenger")
+
+passenger_survival <- passenger_titanic %>% 
+  filter(survived == "yes") %>% 
+  summarise(prob = n()/nrow(passenger_titanic))
+passenger_survival
+
+#Same results but method to get data into table if further work required.
+new_titanic %>% 
+  group_by(pass_crew) %>% 
+  mutate(number_in_group = n()) %>% 
+  ungroup() %>% 
+  group_by(pass_crew, survived) %>% 
+  mutate(survival_status_in_group = n()) %>% 
+  mutate(survival_status_chance = survival_status_in_group/number_in_group) %>% 
+  distinct(survival_status_chance)
+  
+
+
+```
+
+
+# Question 1.
+If I roll a six-sided dice once, what is the probability of getting a number less than 5?
+_Without code - 4/6_
+_With code - The answer is 0.666667 or 4/6_
+```{r}
+one_dice <- rolldie(1)
+
+chance_of_under_five <- one_dice %>% 
+  filter(X1 <5) %>% 
+  summarise(probability = n()/nrow(one_dice))
+chance_of_under_five
+```
+
+# Question 2.
+How many outcomes are there in the sample space of an experiment in which we toss three dice?
+_Without code - 6^3 = 216_
+_With code - there are 216 possible outcomes in the table_
+```{r}
+rolldie(3)
+```
+
+
+# Question 3.
+In an experiment where we roll four dice:
+
+how many outcomes are in the event where the total of the four dice equals 5, 6 or 7)?
+what is the probability of this event?
+what assumptions do we apply in answering part ii?
+Hint
+For part i, rowSums(.) may help you setup up the necessary random variable total (or you can use pivot_longer())
+_Without code - There are now 6^4 outcomes = 1296, there are 18 outcomes, 18/1296 probability _
+_With code there are 1296 outcomes and 34 of these produce a total of 5,6 or 7. There is a 0.026 (2.6%) probability of these results_
+_Assumption is made that the total is all that is important and the dice are all equivalent. Also all dice a fair._
+```{r}
+
+four_die <- rolldie(4)
+
+four_die %>% 
+  mutate(sum_of_rolls = rowSums(.)) %>% 
+  filter(sum_of_rolls %in% c(5,6,7)) %>% 
+  summarise(probability = n()/nrow(four_die))
+```
+
+# Question 4.
+Five chairs are placed in a row in a room, along with five people of differing height. The people sit down randomly on the chairs. What is the probability that they sit in order of decreasing height, left to right?
+
+Hint
+This is an arrangement where order matters. Of all the possible arrangements, how many are correct?
+_Without code 5*4*3*2, only one outcome in order so 1/120_
+_With code, 120 outcomes, still only 1 correct answer 0.00833 (0.8%)_
+
+
+```{r}
+
+people <- c(1,2,3,4,5)
+
+permutations(5,5,people) %>% 
+  as_tibble() %>% 
+  summarise(probability = 1/n())
+```
+
+
+
+# Question 5.
+I roll six dice:
+
+what is the probability I see the numbers 6, 5, 4, 3, 2 and 1 in order on the dice, left to right?
+what is the probability I see one each of the numbers 6, 5, 4, 3, 2 and 1 on the dice regardless of order?
+Hint
+Have a look at the isin() function in the prob.R file. For example, to filter all rows containing 6, 1, 2 in that order, you could use isin(., c(6, 1, 2), ordered = TRUE)
+_Without code, there is one possibility for in order out of 6^6 = 46656 possible outcomes. Would think there are 6*5*4*3*2 = 720 outcomes with all numbers shown_
+_With code, calculates to 46656 outcomes. This also calcualtes 720 outcomes where this is true. 720/46656 = 0.154 (1.5%)_
+
+
+```{r}
+
+six_die <- rolldie(6)
+
+isin(six_die, c(1,2,3, 4, 5, 6), ordered = FALSE) %>%
+  as.tibble() %>% 
+  count(value)
+
+```
+
+
+# Question 6.
+If I draw a single card from a 52-card deck, and it is black, what is the probability that its suit is spades?
+
+Hints
+Investigate the cards() function in the prob.R file, if you’d like to try this in R (make a deck without jokers).
+You could think about adding your own black_card random variable to the sample space, which would be TRUE if the suit is ‘Spade’ or ‘Club’, and FALSE otherwise.
+_Without code 0.5 (50%)_
+_With code - can't see the way to work this one_
+```{r}
+
+
+
+
+
+cards <- function (jokers = FALSE)
+{
+  x <- c(2:10, "J", "Q", "K", "A")
+  y <- c("Club", "Diamond", "Heart", "Spade")
+  z <- c("Black", "Red")
+  res <- expand.grid(rank = x, suit = y)
+  if (jokers) {
+    levels(res$rank) <- c(levels(res$rank), "Joker")
+    res <- rbind(res, data.frame(rank = c("Joker", "Joker"),
+                                 suit = c(NA, NA)))
+  }
+  return(res)
+}
+
+
+
+
+```
