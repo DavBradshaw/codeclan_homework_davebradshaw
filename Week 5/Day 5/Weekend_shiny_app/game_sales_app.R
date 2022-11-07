@@ -80,15 +80,21 @@ ui <- fluidPage(
                       plotOutput(outputId = "critics_plot"))
              )
     ),
-    
+    #The idea behind showing the data in these three formats was that the user could decide what factors mattered
+    #most to them when deciding what game they might purchase given the criteria they have chosen. 
+    #Showing all three may help them make decisions when factors are close and visuals may be more beneficial
+    #than a table for this (particularly in years with lots of games). 
     
     
     
     tabPanel(title = "I only care about Resident Evil games",
              
-             plotOutput(outputId = "resi_plot"),
-             "now some test?"
+             plotOutput(outputId = "resi_plot")
+      
     ),
+    
+    #This graph will show readers which resident evil games received the best user scores with an acknowledgment
+    #to the critic score using the size of the point. It should help them identify the best game as the users of the game have rated it.
     
     tabPanel(title = "I only care about FIFA games",
              selectInput(
@@ -102,6 +108,10 @@ ui <- fluidPage(
              plotOutput(outputId = "fifa_overall")
     )
   )
+  
+  #This plot shows the total sales of all FIFA games released in a given year. Data shows this appears to have peaked in popularity in
+  #2012/2013 before declining again. It appers not as many people are buying new FIFA games annually as they were a few years ago. 
+  #The smooth curve "loess" method was used as the data appears to have peaked and it now declining therefore a straight line would not have been suitable.
   
 )
 
