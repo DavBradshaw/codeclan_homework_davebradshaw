@@ -12,6 +12,7 @@ Have a look at the distinct values of the class variable, this will tell you whe
 
 ```{r}
 titanic <- read_csv("data/titanic.csv")
+titanic
 titanic %>% 
   count(class)
 
@@ -28,7 +29,7 @@ crew_titanic <- new_titanic %>%
 
 crew_survival <- crew_titanic %>% 
   filter(survived == "yes") %>% 
-  summarise(prob = n()/nrow(crew_titanic))
+  summarise(prob_crew_survival = n()/nrow(crew_titanic))
 crew_survival
 
 
@@ -38,7 +39,7 @@ passenger_titanic <- new_titanic %>%
 
 passenger_survival <- passenger_titanic %>% 
   filter(survived == "yes") %>% 
-  summarise(prob = n()/nrow(passenger_titanic))
+  summarise(prob_passenger_survival = n()/nrow(passenger_titanic))
 passenger_survival
 
 #Same results but method to get data into table if further work required.
@@ -52,7 +53,7 @@ new_titanic %>%
   distinct(survival_status_chance) %>% 
   filter(survived == "yes")
 
-#
+#get results by class on board
 new_titanic %>% 
   group_by(class) %>% 
   mutate(number_in_class = n()) %>% 
@@ -138,7 +139,7 @@ what is the probability I see one each of the numbers 6, 5, 4, 3, 2 and 1 on the
 Hint
 Have a look at the isin() function in the prob.R file. For example, to filter all rows containing 6, 1, 2 in that order, you could use isin(., c(6, 1, 2), ordered = TRUE)
 _Without code, there is one possibility for in order out of 6^6 = 46656 possible outcomes. Would think there are 6*5*4*3*2 = 720 outcomes with all numbers shown_
-_With code, calculates to 46656 outcomes. This also calcualtes 720 outcomes where this is true. 720/46656 = 0.154 (1.5%)_
+_With code, calculates to 46656 outcomes. This also calcualtes 720 outcomes where this is true. 720/46656 = 0.0154 (1.5%)_
 
 
 ```{r}

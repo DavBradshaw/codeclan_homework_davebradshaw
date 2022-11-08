@@ -1,0 +1,147 @@
+```{r}
+library(tidyverse)
+library(janitor)
+library(skimr)
+```
+# Question 1.
+Load the data, clean_names() and explore it.
+_Changed rating to a numeric value, doesn't make a difference but should be a number_
+```{r}
+phones <- read_csv("data/20190928-items.csv") %>% 
+  clean_names()
+phones <- phones %>% 
+  mutate(rating = as.numeric(rating))
+
+phones %>% 
+  skim()
+head(phones)
+
+
+```
+
+# Question 2.
+Find the brand with the highest numbers of phones in the dataset.
+_There are 397 samsung phones in the data_
+```{r}
+phones %>% 
+  count(brand) %>% 
+  slice_max(n)
+```
+
+
+
+# Question 3.
+For your top brand, plot the distribution of phone ratings as a probability density, overlaying a fitted normal distribution. Do you think the normal distribution provides a good model of these ratings?
+Hint
+_Would be best to fit ratings by the number of ratings so did this as well after_
+_Normal distirbution seems from a visual representation to be a decent approximation for the model of the ratings_
+```{r}
+samsung_stat <- phones %>% 
+  summarise(rating_mean = mean(rating), rating_sd = sd(rating))
+
+phones %>% 
+  filter(brand == "Samsung") %>% 
+  ggplot(aes(x = rating))+
+  geom_histogram(aes(y = ..density..))+
+  stat_function(
+    fun = dnorm,
+    args = list(
+      mean = samsung_stat$rating_mean,
+      sd = samsung_stat$rating_sd
+    ), col = "coral"
+  )
+
+phones_expanded <- phones %>% 
+  uncount(total_reviews)
+
+phones_expanded %>% 
+  filter(brand == "Samsung") %>% 
+  ggplot(aes(x = rating))+
+  geom_histogram(aes(y = ..density..))+
+  stat_function(
+    fun = dnorm,
+    args = list(
+      mean = samsung_stat$rating_mean,
+      sd = samsung_stat$rating_sd
+    ), col = "coral"
+  )
+
+
+
+```
+
+
+
+# Question 4.
+We can be more quantitative in comparing the distribution of top brand ratings with a normal distribution. You calculated the mean() and sd() of your distribution in an earlier question. Use these values to calculate the proportions of ratings within one-, two- and three standard deviations of the mean. Compare these proportions with those you expect for a normal distribution.
+
+Hint
+You can use a filter() to get only the ratings within one-, two- and three standard deviations of the mean, and then think about how to calculate what proportion each of these filtered sets make of the total number of ratings. You’ll need to use three separate filter() and summarise() pipes to do this.
+Further hint - code to filter within one SD
+Here’s the code to filter and summarise the proportion of ratings within one standard deviation of the mean.
+
+samsung_ratings %>%
+  filter(rating >= samsung_stats$mean - samsung_stats$sd) %>%
+  filter(rating <= samsung_stats$mean + samsung_stats$sd) %>%
+  summarise(prop_within_1sd = n() / nrow(samsung_ratings))
+
+
+_The phone ratings for samsung do not quite meet the criteria to be classed as normal data. 1SD data is very highly grouped but 2SD and 3SD data are not grouped tightly enough to the mean in my view._ 
+_Data is farily close to being normal though_
+_Looks more normal when using the expanded dataset, just with a heavier loading centrally than normal but not enough to not be normal distribution_
+```{r}
+phones %>% 
+  filter(brand == "Samsung") %>% 
+  mutate(z_rating = scale(rating)) %>% 
+  mutate(
+    within_one_sigma = if_else(abs(z_rating) <= 1, TRUE, FALSE),
+    within_two_sigma = if_else(abs(z_rating) <= 2, TRUE, FALSE),
+    within_three_sigma = if_else(abs(z_rating) <= 3, TRUE, FALSE)) %>% 
+  summarise(
+    n_within_one = sum(within_one_sigma)/n(),
+    n_within_two = sum(within_two_sigma)/n(),
+    n_within_three = sum(within_three_sigma)/n()
+  )
+
+
+
+phones_expanded %>% 
+  filter(brand == "Samsung") %>% 
+  mutate(z_rating = scale(rating)) %>% 
+  mutate(
+    within_one_sigma = if_else(abs(z_rating) <= 1, TRUE, FALSE),
+    within_two_sigma = if_else(abs(z_rating) <= 2, TRUE, FALSE),
+    within_three_sigma = if_else(abs(z_rating) <= 3, TRUE, FALSE)) %>% 
+  summarise(
+    n_within_one = sum(within_one_sigma)/n(),
+    n_within_two = sum(within_two_sigma)/n(),
+    n_within_three = sum(within_three_sigma)/n()
+  )
+
+```
+  
+  
+  
+  
+  
+# 2 Extension
+Investigate the use of the qqnorm() plot in R to determine whether data is normally distributed. What is a ‘quantile-quantile plot’? What do we expect to see in a qqnorm() plot if data is nearly normally distributed?
+
+_A straight line would show the data is normally distributed_
+_Central data is normally distributed but the tails are not, probably because there are max/min values that cap the data set_
+_Expanded straightens line slightly_
+```{r}
+qqnorm(phones$rating)
+
+
+qqnorm(phones_expanded$rating)
+
+```
+
+
+Here are a few resources:
+
+Understanding QQ plots
+Short video tutorial (the presenter doesn’t use RStudio, but the commands are the same. Just ignore the final comments on hypothesis tests for now.)
+Longer video tutorial
+Quantile-Quantile plots - R Base Graphs
