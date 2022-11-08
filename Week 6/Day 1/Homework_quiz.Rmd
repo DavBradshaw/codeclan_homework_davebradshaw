@@ -49,10 +49,21 @@ new_titanic %>%
   group_by(pass_crew, survived) %>% 
   mutate(survival_status_in_group = n()) %>% 
   mutate(survival_status_chance = survival_status_in_group/number_in_group) %>% 
-  distinct(survival_status_chance)
+  distinct(survival_status_chance) %>% 
+  filter(survived == "yes")
+
+#
+new_titanic %>% 
+  group_by(class) %>% 
+  mutate(number_in_class = n()) %>% 
+  ungroup() %>% 
+  group_by(class, survived) %>% 
+  mutate(survival_status_in_class = n()) %>% 
+  mutate(survival_status_chance_class = survival_status_in_class/number_in_class) %>% 
+  distinct(survival_status_chance_class) %>% 
+  filter(survived == "yes") %>% 
+  arrange(desc(survival_status_chance_class))
   
-
-
 ```
 
 
