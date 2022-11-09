@@ -1,0 +1,150 @@
+```{r}
+library(tidyverse)
+library(infer)
+library(janitor)
+library(skimr)
+```
+# Task 1.
+
+Load the data again, clean_names(), and re-familiarise yourself with it
+```{r}
+ames <- read_csv("data/ames.csv") %>% 
+  clean_names()
+skim(ames)
+ames <- ames %>% 
+  mutate(older_than_1920 = ifelse(year_built <1920, "yes", "no"))
+```
+# Task 2.
+
+Investigate the distribution of lot_area. Is the distribution roughly normal? If not, what problems do you find?
+_The data is very highly skewed to the right some very large values as outliers from the average. Shows better on the boxplot where these values are visible instead of hiding along the baseline due to the scale._
+```{r}
+#histogram
+ames %>% 
+  ggplot(aes(x = lot_area))+
+  geom_histogram()
+#boxplot
+ames %>% 
+  ggplot(aes(x = lot_area))+
+  geom_boxplot()
+
+ames %>% 
+  summarise(mean_lot_area = mean(lot_area))
+
+```
+# Task 3.
+
+Compute and visualise a bootstrap sampling distribution for the mean(lot_area) of the sold houses.
+_We have 2930 oberservations so I will be bootstrapping on 150 values as roughly 1/20 of the sample available_
+_The histogram below gives a relatively normal distribution with only a small skew to the larger values._
+```{r}
+#generate data
+bootstrap_resample_150 <- ames %>% 
+  rep_sample_n(size = 150, replace = TRUE, reps = 1000) %>% 
+  summarise(mean_lot_area = mean(lot_area))
+#find mean of all bootstrap data
+bootstrap_resample_150 %>% 
+  ungroup() %>% 
+  summarise(mean = mean(mean_lot_area))
+#visualisation
+bootstrap_resample_150 %>% 
+  ggplot(aes(mean_lot_area))+
+  geom_histogram()
+```
+
+# Task 4.
+
+Use your bootstrap distribution to calculate a 95% CI for mean(lot_area), and visualise it on the distribution
+
+```{r}
+#did not work using bootstrapped data in first two chunks - not sure why
+# boot_150_CI <- bootstrap_resample_150 %>% 
+#   get_ci(level = 0.95, type = "percentile")
+#   
+# bootstrap_resample_150 %>% 
+#   visualise(bins = 30)+
+#   shade_ci(endpoints = boot_150_CI)
+
+
+infer_150 <- ames %>% 
+  specify(response = lot_area) %>% 
+  generate(reps = 1000, type = "bootstrap") %>% 
+  calculate(stat = "mean")
+infer_150
+
+infer_150_CI <- infer_150 %>% 
+  get_ci(level = 0.95, type = "percentile")
+infer_150_CI
+infer_150 %>% 
+  visualise(bins = 30)+
+  shade_ci(endpoints = infer_150_CI)
+```
+
+# Task 5.
+You would like to know the mean(lot_area) of the sold houses with higher confidence. Calculate the 99% CI for this variable (you can re-use your bootstrap distribution from above). Is it narrower or broader than the 95% CI? Does that make sense?
+_It is broader only not visibly so on the data_
+```{r}
+infer_150
+
+infer_150_CI_99 <- infer_150 %>% 
+  get_ci(level = 0.99, type = "percentile")
+infer_150_CI_99
+infer_150 %>% 
+  visualise(bins = 30)+
+  shade_ci(endpoints = infer_150_CI)
+
+```
+
+
+# Task 6.
+Calculate the point estimate of the mean(lot_area)
+_The point estimate for my infered data is 10149, compared to 10148 for the original data_
+```{r}
+infer_150 %>% 
+  summarise(point_estimate = mean(stat))
+
+```
+
+
+2 Extension
+
+
+# Task 1.
+Calculate a point estimate and 95% CI for the proportion of houses in the data built before 1920. Does the number of reps you use matter? [Investigate reps from 200 up to 50000, memory of your laptop permitting].
+_Using the full dataset the mean value is 0.060068 (6%)_
+_Think we need to add a column for this proportion, will go back to the top and add to the dataset there_
+_The point estimate for 200 replicates is 0.060116_
+_The point estimate for 5000 replicates is 0.060035_
+_More replicates is bring the value closer to the observed mean_
+```{r}
+ames %>% 
+  summarise(prop_old = mean(year_built < 1920))
+
+ames %>% 
+  filter(older_than_1920 == "yes") %>% 
+  summarise(prop_old = n()/nrow(ames))
+
+infer_year_200 <- ames %>% 
+  specify(response = older_than_1920, success = "yes") %>% 
+  generate(reps = 200, type = "bootstrap") %>% 
+  calculate(stat = "prop")
+ci_year_200 <- infer_year_200 %>% 
+  get_ci(level = 0.95, type = "percentile")
+point_estimate_year_200 <- infer_year_200 %>% 
+  summarise(point_est_200 = mean(stat))
+point_estimate_year_200
+
+
+infer_year_5000 <- ames %>% 
+  specify(response = older_than_1920, success = "yes") %>% 
+  generate(reps = 5000, type = "bootstrap") %>% 
+  calculate(stat = "prop")
+ci_year_5000 <- infer_year_5000 %>% 
+  get_ci(level = 0.95, type = "percentile")
+point_estimate_year_5000 <- infer_year_5000 %>% 
+  summarise(point_est_5000 = mean(stat))
+point_estimate_year_5000
+```
+
+
+
