@@ -1,0 +1,92 @@
+```{r}
+library(tidyverse)
+library(infer)
+library(janitor)
+```
+```{r}
+transactions <- read_csv("data/online_retail_subset.csv")
+
+transactions
+```
+For the first section we are interested in the purchase of two particular items:
+
+item A - ‘HEART OF WICKER SMALL’ (StockCode 22469)
+item B - ‘LARGE CAKE TOWEL PINK SPOTS’ (StockCode 21110)
+
+# Question 1.
+Calculate the support for item A (this will be the support for a single item)
+
+Item A was purchased 110 times, total in database is 30000.
+Support for item A is 0.00366667
+```{r}
+transactions %>% 
+  filter(StockCode == 22469)
+
+support_A <- transactions %>% 
+  filter(StockCode == 22469) %>% 
+  summarise(prop = n()/nrow(transactions))
+support_A
+```
+support for item B
+only 14 rows of item B. Support for this item is 0.000466667
+```{r}
+transactions %>% 
+  filter(StockCode == 21110)
+
+support_B <- transactions %>% 
+  filter(StockCode == 21110) %>% 
+  summarise(prop = n()/nrow(transactions))
+support_B
+```
+# Question 2.
+Calculate the support and confidence for rule (A→B).
+
+Support A->B = 0.00023333
+Confidence A-> = 1.127273
+```{r}
+sup_A_B <- transactions %>% 
+  filter(StockCode == 22469 | StockCode == 21110) %>% 
+  count(InvoiceNo) %>% 
+  filter(n == 2) %>% 
+  summarise(bought_together = n()/nrow(transactions))
+sup_A_B
+
+
+conf_A_B <- sup_A_B/support_A
+conf_A_B
+```
+
+# Question 3.
+Calculate the lift for (A→B)
+lift is 136
+```{r}
+lift_A_B <- sup_A_B / (support_A * support_B)
+
+lift_A_B
+```
+
+```{r}
+library(arules)
+library(arulesViz)
+```
+
+
+```{r}
+transactions_reformat <- transactions %>%
+  select(InvoiceNo, Description) %>%
+  na.omit()
+
+write_csv(transactions_reformat, "transactions_reformat.csv")
+
+apriori_format <- read.transactions("transactions_reformat.csv", format = "single", sep = ",", header = TRUE, cols = c("InvoiceNo", "Description"))
+
+```
+
+```{r}
+inspect(head(apriori_format))
+```
+
+```{r}
+itemFrequencyPlot(transactions, topN = 20, type = "absolute")
+```
+

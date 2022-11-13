@@ -1,0 +1,290 @@
+```{r}
+library(tidyverse)
+library(infer)
+data(msleep)
+msleep
+```
+
+
+MVP
+1.1 Hypothesis testing - practical
+You work for an animal conservation organisation and are looking to do some investigating into some of the animals to provide evidence for some projects you are looking to run.
+
+In this homework we’ll use the msleep data set provided in the ggplot package. It concerns the sleeping patterns of various types of mammal.
+
+# Question 1.
+Explore the dataset and familiarise yourself with it.
+_We are looking to carry out statistical analysis on sleep which has no missing data. Check that total sleep and awake add up to 24 hours in a day, they basically do bar rounding errors (max 24.05 hours)_
+_We also want to look at character columns conservation and vore_
+```{r}
+
+head(msleep)
+
+skimr::skim(msleep)
+
+msleep %>% 
+  mutate(hours = sleep_total + awake) %>% 
+  count(hours)
+
+```
+
+
+# Question 2.
+Jabberwockies sleep for around 7 hours a night, on average. Perform an appropriate statistical test to determine whether the mean sleep_total in the sampled population of animal types differs from the typical value for jabberwockies.
+
+one sample mean testing
+
+1. Chosen significance level = 0.05
+
+2. Observed statistic = 10.43373 hours sleep
+Visually the data looks to have a relatively even spread (boxplot) with data distributed non-normally (histogram)
+```{r}
+
+obs_mean_sleep <- msleep %>% 
+  summarise(mean_sleep = mean(sleep_total))
+obs_mean_sleep
+
+msleep %>% 
+  ggplot(aes(x = sleep_total))+
+  geom_histogram()
+
+msleep %>% 
+  ggplot(aes(x = sleep_total))+
+  geom_boxplot()
+```
+3. NULL hypothesis - there is no difference between the observed statistic for average animals sleep and the typical value for jaberwockies. mean_sleep == 7.
+Alternative hypothesis - there is a difference between the observed statistic for average animals sleep and the typical value for jaberwockies. mean_sleep != 7.
+
+4. Generated NULL distirbution with 2000 replicates based around the mu value of 7.
+
+5. Visualise p value of distribution. It is way off to the side of the data so we would expect we may favor the HA.
+
+6. p-value is close to 0 and < our significance level of 0.05. We therefore reject the NULL hypothesis in favor of the alternative hypothesis. There is a difference between average sleep hours of jabberwockies and the animals in our sample.
+```{r}
+NULL_dist_sleep <- msleep %>% 
+  specify(response = sleep_total) %>% 
+  hypothesise(null = "point", mu = 7) %>% 
+  generate(reps = 2000, type = "bootstrap") %>% 
+  calculate(stat = "mean")
+
+NULL_dist_sleep %>% 
+  visualise(bins = 30)+
+  shade_p_value(obs_stat = obs_mean_sleep$mean_sleep,
+                direction = "both")
+
+NULL_dist_sleep %>% 
+  get_p_value(obs_stat = obs_mean_sleep$mean_sleep,
+                direction = "both")
+```
+
+# Question 3.
+Perform an appropriate statistical test to determine whether omnivores sleep for significantly longer than herbivores, on average.
+
+two sample mean testing
+
+1. Chosen significance level = 0.05
+
+2. Observed statistics = omnivores 10.925 hours sleep, herbivores 9.5909375 hours sleep
+
+On average omnivores sleep 1.4156 hours than herbivores.
+Visually the data shows a much larger range for herbivores. Medians are very similar. Mulitple outliers values for omnivores meaning it may be better to carry out this analysis using the median.
+```{r}
+
+msleep %>% 
+  count(vore)
+
+obs_omni_sleep <- msleep %>% 
+  filter(vore == "omni") %>% 
+  summarise(omni_sleep = mean(sleep_total))
+obs_omni_sleep
+
+obs_herbi_sleep <- msleep %>% 
+  filter(vore == "herbi") %>% 
+  summarise(herbi_sleep = mean(sleep_total))
+obs_herbi_sleep
+
+obs_diff_sleep <- msleep %>% 
+  filter(vore == "omni"|vore == "herbi") %>% 
+  specify(sleep_total ~ vore) %>% 
+  calculate(stat = "diff in means", order = c("omni", "herbi"))
+obs_diff_sleep
+
+msleep %>% 
+  ggplot(aes(x = sleep_total, y = vore))+
+  geom_boxplot()
+```
+3. NULL hypothesis - omnivores sleep for less than or equal to herbivores. omni_sleep <= herbi_sleep
+Alternative hypothesis - Omnivores sleep for longer than herbivores, omni_sleep > herbi_sleep
+
+4. Generated NULL distirbution with 2000 replicates based on the mean sleep value with vore(omni/herbi) as variable.
+
+5. Visualise p value of distribution. It is relatively central so we would expect to fail to reject H0.
+
+6. p-value is >0.05 significane level so we fail to reject to NULL hypothesis. Omnivores do not sleep a statistically significant amount longer than herbivores.
+```{r}
+NULL_dist_vore_sleep <- msleep %>% 
+  filter(vore == "omni"|vore == "herbi") %>% 
+  specify(response = sleep_total, explanatory = vore) %>% 
+  hypothesise(null = "independence") %>% 
+  generate(reps = 2000, type = "permute") %>% 
+  calculate(stat = "diff in means", order = c("omni", "herbi"))
+
+NULL_dist_vore_sleep %>% 
+  visualise(bins = 30)+
+  shade_p_value(obs_stat = obs_diff_sleep$stat,
+                direction = "both")
+
+NULL_dist_vore_sleep %>% 
+  get_p_value(obs_stat = obs_diff_sleep$stat,
+                direction = "both")
+```
+# Question 4. Perform an appropriate statistical test to determine whether the proportion of domesticated animal types in the population of animal types is greater than 5%.
+
+one sample proportion testing
+
+1. Chosen significance level = 0.05
+
+2. In this case I have assumed that NA conservation status is a valid response and these animals can be classed as NON-dometicated. Viewing NA results suggests that though it is debatable that humans are domesitcated. Coalesce these to be "none" where this means non-domesticated, no conservation status
+Observed statistics = 0.12 proportion of animals in sample are domesticated.
+
+
+```{r}
+msleep %>% 
+  filter(is.na(conservation))
+
+domesticated_sleep <- msleep %>%
+  mutate(conservation = coalesce(conservation, "none")) %>%
+  mutate(domesticated = ifelse(conservation == "domesticated", "dom", "non_dom"))
+
+prop_domesticated <- domesticated_sleep %>% 
+  filter(domesticated == "dom") %>% 
+  summarise(prop_domesticated = n()/nrow(domesticated_sleep))
+prop_domesticated
+
+
+
+```
+
+3. NULL hypothesis - proportion of domesticated animals is <=5%.
+Alternative hypothesis - Proportion of domesticated animals in population will be >5% (0.05)
+
+4. Generated NULL distirbution with 2000 replicates based on the proportion domesticated as variable.
+
+5. Visualise p value of distribution. It is a lot greater than the central point so we may expect to reject the NULL hypothesis
+
+6. p-value is <0.05 significane level so we reject to NULL hypothesis. The amount of domesticated animals in the population would be expected to be statistically significantly greater than 5%.
+
+```{r}
+domesticated_sleep
+ 
+  
+null_dist_domesticated_sleep <- domesticated_sleep%>% 
+  specify(response = domesticated, success = "dom") %>%
+  hypothesise(null = "point", p = 0.05) %>% 
+  generate(reps = 2000, type = "draw") %>% 
+  calculate(stat = "prop")
+
+null_dist_domesticated_sleep %>% 
+  visualise(bins = 12)+
+  shade_p_value(obs_stat = prop_domesticated$prop_domesticated,
+                direction = "greater")
+
+null_dist_domesticated_sleep %>% 
+  get_p_value(obs_stat = prop_domesticated$prop_domesticated,
+                direction = "greater")
+```
+
+
+1.2 Hypothesis testing - Defining the Hypothesis
+For the following three business problems write out:
+
+What kind of test you would use
+H0 and Ha in both mathematical notation and in words.
+Also state the method you would use to generate the null distribution (bootstrap, permutation or draw).
+
+
+# Question 1.
+You work for a independent coffee shop. The boss tells you that she thinks that around 40% of people in the town (population 30,000) know of the coffee shop, but you are skeptical of the estimate. You conduct a random survey of 200 people in the town, asking if respondents are aware of your coffee shop. You want to use the sample to test the hypothesis that 40% or more of the town’s population have heard of the coffee shop.
+
+_One sample proportion test using value "aware of coffee shop"_
+_H0 = proportion_aware_of_coffee_shop <= 40% (0.04). The proportion of people aware of the coffee shop is less than or equal to 40%._
+_HA = proportion_aware_of_coffee_shop > 40% (0.04). The proportion of people aware of the coffee shop is greater than 40%._
+_Method for generating bootstrap data would be draw, approx code below_
+_Note - carrying out this survey would probably make people aware or remember the coffee shop so the results may be skewed to more people being aware. Would need to be careful with wording of the question _
+```{r}
+# null_distribution_coffee <- coffee_survey %>% 
+#   specify(response = aware_of_shop, success = "yes") %>% 
+#   hypothesise(null = "point", p = 0.40) %>% 
+#   generate(reps = 2000, type = "draw") %>% 
+#   calculate(stat = "prop")
+```
+
+# Question 2.
+You work for a website design company and have performed an A/B test on the position of a banner on a website promoting a particular item.
+
+A/B testing A method comparing two versions of a web page, email, flyer or other marketing device against each other to determine which version performs better. As it is essentially a controlled experiment, the design should try to ensure that the groups experiencing both versions of the marketing device are equivalent and representative of the population.
+
+
+
+# You selected five days at random last month and then randomly selected 200 of each sampled day’s users into group A and another 200 of that day’s users into group B. Group A continued to be shown the banner at the right hand side of the webpage (its usual position) while group B was shown the banner at the top of the page. You monitored each sampled user’s interactions with the website, in particular the ‘click through rate’ (CTR) on the banner, i.e. what proportion of sampled users clicked on the banner. You want to use the sampled data to test the hypothesis that website users overall are more likely to click on the banner if positioned at the top of the page
+
+
+_Two ways you could measure this, most likely by monitoring simply whether people have clicked on the banner to view the item which would be a two_sample_proportion_test_
+_You could also compare the spend generated by the advert position if there were an item people might buy more than one of which would be two_sample_mean (this is probably less useful though)_
+_H0 = The proportion of clicks on the banner does not change based on it's position. Prop_clicks_A >= Prop__B_
+_HA = The proportion of clicks on the banner is different based on the it's position. Prop_clicks_A < Prop_clicks_B_
+_Method for generating bootstrap data would be permutation, approx code below_
+
+```{r}
+
+
+# null_distribution_banner <- banner_data %>% 
+#   specify(click_on_banner ~ group, success = "clicked_on_banner") %>% 
+#   hypothesise(null = "independence") %>% 
+#   generate(reps = 1000, type = "permute") %>% 
+#   calculate(stat = "diff in props", order = c("group_A", "group_B"))
+
+```
+
+# Question 3.
+You work as an analyst for a car manufacturing company - they have specific standards they must meet for standards and regulation purposes. You have been asked to check the quality control of the manufacture of a particular car part. You have been given data on a sample of 200 parts produced over the period of a week (the sampled parts were pulled at random from the production line and measured: the factory produced a lot more than 200 parts that week). The specification of the part stipulates a width of 145mm, and the manufacturing process is said to have ‘drifted’ if the mean width of parts differs significantly from 145mm. You want to use the sampled measurements to test whether the process overall has drifted.
+
+
+
+_Answer by this method_
+
+_One sample mean testing_
+_H0 - there is no difference between the measured part from this week and the set value of 145mm, part_width == 145_
+_HA - there is a difference between the measured part from this week and the set value of 145mm, part_width != 145_
+_I would generate the null distribution using bootstrapping, approx code below_
+
+_In reality I would enter the parts data in a control chart, plotting the data points over time geom_point could do this. Then add in lines for the specification value and upper and lower control limits. A line connecting the points would show point ideally a flat line or random variation within that, a trend of a rising or falling line would let us know that we should expect failures in the near future (or may have seen them within this weeks data). In this case action could be taken to prevent failures rather than reacting to failures._
+
+```{r}
+# null_distribution_parts <- parts_data %>% 
+#   specify(response = part_width) %>% 
+#   hypothesis(null = "point", mu = 145) %>% 
+#   generate(reps = 2000, type = "bootstrap") %>% 
+#   calculate(stat = "mean")
+```
+
+
+# 1.3 Hypothesis Testing - Interpreting the results
+For the 3 business problems stated above, imagine we performed you got the following p-values (with the given significance levels) write out your interpretation of the results.
+
+# Question 1.
+
+Coffee shop problem. Significance level: 0.05, calculated p-value: 0.07
+_We fail to reject the NULL hypothesis. The proportion of people aware of the coffee shop is less than or equal to 40%._
+
+# Question 2.
+
+Website company problem. Significance level: 0.01, p-value: 0.006
+
+_We reject the NULL hypothesis in favor of the alternative hypothesis. Group B clicked the banner more frequently than group A, therefore the top of the page banner is more likely to generate more clicks in the population as a whole_
+
+# Question 3.
+
+Manufacturing company problem. Significance level: 0.05, p-value: 0.55
+
+_We fail to reject the NULL hypothesis. There is no statistically significant difference in the size of parts measured the the specification value_
