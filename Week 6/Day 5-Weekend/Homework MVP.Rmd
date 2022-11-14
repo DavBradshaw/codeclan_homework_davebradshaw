@@ -155,6 +155,7 @@ msleep %>%
 domesticated_sleep <- msleep %>%
   mutate(conservation = coalesce(conservation, "none")) %>%
   mutate(domesticated = ifelse(conservation == "domesticated", "dom", "non_dom"))
+domesticated_sleep
 
 prop_domesticated <- domesticated_sleep %>% 
   filter(domesticated == "dom") %>% 

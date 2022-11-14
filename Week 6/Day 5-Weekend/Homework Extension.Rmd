@@ -26,6 +26,17 @@ support_A <- transactions %>%
   filter(StockCode == 22469) %>% 
   summarise(prop = n()/nrow(transactions))
 support_A
+
+#after seeing answers
+transaction_count <- transactions %>% 
+  summarise(n = n_distinct(InvoiceNo)) %>% 
+  flatten_dbl()
+
+support_A <- transactions %>% 
+  filter(StockCode == 22469) %>% 
+  summarise(prop = n_distinct(InvoiceNo)/transaction_count)
+support_A
+
 ```
 support for item B
 only 14 rows of item B. Support for this item is 0.000466667
@@ -36,6 +47,13 @@ transactions %>%
 support_B <- transactions %>% 
   filter(StockCode == 21110) %>% 
   summarise(prop = n()/nrow(transactions))
+support_B
+
+#after seeing answers
+
+support_B <- transactions %>% 
+  filter(StockCode == 21110) %>% 
+  summarise(prop = n_distinct(InvoiceNo)/transaction_count)
 support_B
 ```
 # Question 2.
@@ -85,8 +103,8 @@ apriori_format <- read.transactions("transactions_reformat.csv", format = "singl
 ```{r}
 inspect(head(apriori_format))
 ```
-
+This didn't work for me because I run R on half a screen with notes on the other half. Just needed to go full screen. Got confused and stopped. AHHHH.
 ```{r}
-itemFrequencyPlot(transactions, topN = 20, type = "absolute")
+itemFrequencyPlot(apriori_format, topN=20, type = "absolute")
 ```
 
