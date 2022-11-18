@@ -1,0 +1,19 @@
+```{r}
+library(tidyverse)
+```
+
+```{r}
+waiting_times <- read_csv("data/monthly_ae_waitingtimes_202209.csv")
+read_csv("data/inpatient_and_daycase_by_nhs_board_of_treatment_and_specialty.csv")
+read_csv("data/inpatient_and_daycase_by_nhs_board_of_treatment_and_simd.csv")
+read_csv("data/inpatient_and_daycase_by_nhs_board_of_treatment_age_and_sex.csv")
+read_csv("data/hospital_admissions_hscp_specialty_20221102.csv")
+read_csv("data/hospital_admissions_hscp_simd_20221102.csv")
+read_csv("data/hospital_admissions_hscp_agesex_20221102.csv")
+read_csv("data/hospital_admissions_hb_specialty_20221102.csv")
+read_csv("data/hospital_admissions_hb_simd_20221102.csv")
+read_csv("data/hospital_admissions_hb_agesex_20221102.csv")
+read_csv("data/beds_by_nhs_board_of_treatment_and_specialty.csv")
+
+```
+
