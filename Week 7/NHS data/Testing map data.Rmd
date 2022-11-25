@@ -1,0 +1,30 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(sf)
+library(rnaturalearth)
+library(rnaturalearthdata)
+```
+
+```{r}
+beds <- read_csv("../../../../Dashboard_project/clean_data/clean_beds_2016_to_2021.csv")
+```
+```{r}
+sp::plot(ne_countries(country = "United Kingdom"))
+world
+```
+```{r}
+library(jsonlite)
+
+a <- jsonlite::fromJSON("https://maps.gov.scot/server/rest/services/ScotGov/HealthSocialCare/MapServer?f=pjson")
+
+
+data <- do.call(rbind, a)
+```
+

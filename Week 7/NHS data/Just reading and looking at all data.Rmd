@@ -3,17 +3,87 @@ library(tidyverse)
 ```
 
 ```{r}
-waiting_times <- read_csv("data/monthly_ae_waitingtimes_202209.csv")
-read_csv("data/inpatient_and_daycase_by_nhs_board_of_treatment_and_specialty.csv")
-read_csv("data/inpatient_and_daycase_by_nhs_board_of_treatment_and_simd.csv")
-read_csv("data/inpatient_and_daycase_by_nhs_board_of_treatment_age_and_sex.csv")
-read_csv("data/hospital_admissions_hscp_specialty_20221102.csv")
-read_csv("data/hospital_admissions_hscp_simd_20221102.csv")
-read_csv("data/hospital_admissions_hscp_agesex_20221102.csv")
-read_csv("data/hospital_admissions_hb_specialty_20221102.csv")
-read_csv("data/hospital_admissions_hb_simd_20221102.csv")
-read_csv("data/hospital_admissions_hb_agesex_20221102.csv")
-read_csv("data/beds_by_nhs_board_of_treatment_and_specialty.csv")
 
+waiting_times <- read_csv("data/monthly_ae_waitingtimes_202209.csv") - Conal
+
+board_and_speciality <- read_csv("data/inpatient_and_daycase_by_nhs_board_of_treatment_and_specialty.csv")
+
+board_and_simd <- read_csv("data/inpatient_and_daycase_by_nhs_board_of_treatment_and_simd.csv")
+
+board_and_age_sex <- read_csv("data/inpatient_and_daycase_by_nhs_board_of_treatment_age_and_sex.csv") - Lewis
+
+speciality_admissions <- read_csv("data/hospital_admissions_hscp_specialty_20221102.csv") - Nacho
+
+one <- read_csv("data/hospital_admissions_hscp_simd_20221102.csv")
+
+two <- read_csv("data/hospital_admissions_hscp_agesex_20221102.csv")
+
+three <- read_csv("data/hospital_admissions_hb_specialty_20221102.csv")
+
+four <- read_csv("data/hospital_admissions_hb_simd_20221102.csv")
+
+five <- read_csv("data/hospital_admissions_hb_agesex_20221102.csv")
+
+six <- read_csv("data/beds_by_nhs_board_of_treatment_and_specialty.csv") - Dave
+
+read_csv("data/beds_by_nhs_board_of_treatment_and_specialty.csv") - Dave
+read_csv("data/hospital_admissions_hscp_specialty_20221102.csv") - Nacho
+read_csv("data/inpatient_and_daycase_by_nhs_board_of_treatment_age_and_sex.csv") - Lewis
+read_csv("data/monthly_ae_waitingtimes_202209.csv") - Conal
+
+
+five %>% 
+  ggplot(aes(NumberAdmissions))+
+  geom_histogram()
+
+five %>% 
+  filter(NumberAdmissions >2000) %>% 
+  arrange(desc(NumberAdmissions))
+
+```
+
+Monthly data from July 2007 to September 2022
+Country is all the same
+
+```{r}
+waiting_times %>% 
+  count(Month)
+
+board_and_speciality %>% 
+  count(Quarter)
+
+speciality_admissions %>% 
+  count(WeekEnding)
+
+six %>% 
+  filter(AverageAvailableStaffedBeds <1) %>% 
+  ggplot(aes(AverageAvailableStaffedBeds)) +
+  geom_histogram()
+
+PercentageOccupancy
+six %>% 
+  ggplot(aes(PercentageOccupancy)) +
+  geom_histogram()
+
+six %>%
+  group_by(PercentageOccupancy >95, HB) %>% 
+  summarise(percent_over_95_occupancy = n()/nrow(six)) %>% 
+  ungroup() %>% 
+  arrange(desc(percent_over_95_occupancy))
+
+
+speciality_admissions %>% 
+  count(Specialty)
+
+```
+
+```{r}
+waiting_times %>% 
+  filter(HBT == "S08000015") %>%
+  group_by(Month) %>% 
+  mutate(sum_attendances = sum(NumberOfAttendancesAggregate)) %>% 
+  distinct(Month, sum_attendances) %>% 
+  ggplot(aes(x = Month, y = sum_attendances))+
+  geom_col()
 ```
 
