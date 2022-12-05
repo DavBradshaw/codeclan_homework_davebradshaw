@@ -1,0 +1,124 @@
+```{r}
+library(tidyverse)
+library(here)
+library(janitor)
+```
+
+S08000016,NHS Borders,20140401,,S92000003 - filter data for HB S08000016
+```{r}
+by_age <- read_csv(here("Data/opendata_inc1620comb_hb.csv")) %>% 
+  clean_names() %>% 
+  filter(hb == "S08000016")
+
+by_year <- read_csv(here("data/opendata_inc9620_hb.csv"))%>% 
+  clean_names()%>% 
+  filter(hb == "S08000016")
+```
+
+Messy graph plotting male and female rates for all cancer by year
+```{r}
+by_year %>% 
+  ggplot(aes(x = year, y = incidences_all_ages))+
+  geom_line(aes(group = interaction(sex, cancer_site)))
+
+by_year %>% 
+  group_by(cancer_site) %>% 
+  mutate(total_incidences_all_years = sum(incidences_all_ages)) %>% 
+  filter(sex != "All", cancer_site != "All cancer types") %>% 
+  filter(total_incidences_all_years >=1000) %>% 
+  ggplot()+
+  geom_col(aes(x = cancer_site, y = incidences_all_ages, fill = sex), position = "dodge") +
+  coord_flip()
+
+by_year %>% 
+  group_by(cancer_site) %>% 
+  mutate(total_incidences_all_years = sum(incidences_all_ages)) %>% 
+  filter(sex != "All", cancer_site != "All cancer types") %>% 
+  filter(total_incidences_all_years >=1000) %>% 
+  ggplot()+
+  geom_col(aes(y = cancer_site, x = incidences_all_ages, fill = sex), position = "dodge")+
+  scale_fill_discrete(guide = guide_legend(reverse = TRUE))
+```
+
+Find top 10 cancers for area across year range
+```{r}
+top_10_cancers <- by_year %>%
+  filter(sex == "All") %>% 
+  filter(cancer_site != "All cancer types") %>% 
+  group_by(cancer_site) %>% 
+  summarise(total = sum(incidences_all_ages)) %>% 
+  arrange(desc(total)) %>% 
+  head(10) %>% 
+  pull(cancer_site)
+
+men_top_10_cancers <- by_year %>%
+  filter(sex == "Male") %>% 
+  filter(cancer_site != "All cancer types") %>% 
+  group_by(cancer_site) %>% 
+  summarise(total = sum(incidences_all_ages)) %>% 
+  arrange(desc(total)) %>% 
+  head(10) %>% 
+  pull(cancer_site)
+
+women_men_top_10_cancers <- by_year %>% 
+  filter(sex == "Female") %>% 
+  filter(cancer_site != "All cancer types") %>% 
+  group_by(cancer_site) %>% 
+  summarise(total = sum(incidences_all_ages)) %>% 
+  arrange(desc(total)) %>% 
+  head(10) %>% 
+  pull(cancer_site)
+```
+
+plot top 10 cancers by year for 3 groups
+
+```{r}
+by_year %>% 
+  filter(cancer_site %in% top_10_cancers, sex == "All") %>% 
+  ggplot(aes(x = year, y = incidences_all_ages, colour = cancer_site)) +
+  geom_line()
+
+by_year %>% 
+  filter(cancer_site %in% men_top_10_cancers, sex == "Male") %>% 
+  ggplot(aes(x = year, y = incidences_all_ages, colour = cancer_site)) +
+  geom_line()
+
+by_year %>% 
+  filter(cancer_site %in% women_men_top_10_cancers, sex == "Female") %>% 
+  ggplot(aes(x = year, y = incidences_all_ages, colour = cancer_site)) +
+  geom_line()
+
+```
+
+
+```{r}
+
+by_year %>% 
+  filter(cancer_site == "Colon", sex == "All") %>% 
+  ggplot(aes(x = year)) +
+  geom_line(aes(y = incidences_all_ages), colour = "blue")+
+  geom_line(aes(y = easr), colour = "red")+
+  geom_line(aes(y = wasr), colour = "coral")
+
+
+```
+```{r}
+by_age %>% 
+  filter(cancer_site == "Colon", sex == "All") %>% 
+  pivot_longer(cols = c(incidences_age_under5:incidences_age85and_over), names_to = "age_range", values_to = "incidences") %>% 
+  ggplot(aes(x = age_range, y = incidences))+
+  geom_col()+
+  coord_flip()
+
+by_age %>% 
+  filter(cancer_site == "Colon", sex == "All") %>% 
+  pivot_longer(cols = c(incidence_rate_age_under5:incidence_rate_age85and_over, incidence_rate_age05to9), names_to = "age_range", values_to = "incidences") %>% 
+  ggplot()+
+  geom_col(aes(x = age_range, y = incidences))+
+  coord_flip()
+```
+
+```{r}
+by_year
+```
+

@@ -1,0 +1,53 @@
+```{r}
+library(tidyverse)
+library(here)
+library(janitor)
+```
+
+
+```{r}
+a <- read_csv(here("Data/opendata_inc1620comb_hb.csv"))
+b <- read_csv(here("Data/opendata_inc1620comb_region.csv"))
+c <- read_csv(here("data/opendata_inc1620comb_scotland.csv"))
+d <- read_csv(here("data/opendata_inc9620_hb.csv"))
+e <- read_csv(here("Data/opendata_inc9620_region.csv"))
+f <- read_csv(here("Data/opendata_inc9620_scotland.csv"))
+```
+```{r}
+a
+
+a %>% 
+  count(Year)
+```
+A - healthboard, cancer sites, sex, all data 2016 - 2020, instances per age group, incident rate per 100,000 per age group. EASR european average for age group, WASR world average for age group
+
+```{r}
+b
+
+b %>% 
+  count(Region)
+```
+Does not specify to NHS borders region
+
+```{r}
+c
+
+c %>% 
+  count(Country)
+```
+All just general Scotalnd data
+
+```{r}
+d
+```
+D - healthboard, cancer sites, sex, by year, total instances for all ages, EASR european average for age group, WASR world average for age group
+
+```{r}
+e
+```
+B crossed with D
+
+```{r}
+f
+```
+c corssed with D
