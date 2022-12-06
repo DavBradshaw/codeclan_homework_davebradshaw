@@ -108,7 +108,7 @@ How different are the intercept and coefficient from those obtained above by fit
 Plot the data points, this regression line and the regression line for the full data set. How different are the lines?
 
 _50 is very central and in trend_
-Results barely change_
+_Results barely change, 1.416 ->1.410 and 1.223 -> 1.224_
 
 ```{r}
 
@@ -129,17 +129,17 @@ model_2
 
 Repeat the procedure above, but this time omitting one of your influential outliers.
 
-_Significant change to results for line plot, correlation does not change much._
+_Significant change to results for line plot (1.416 -> 4.381, 1.223 -> 1.011), correlation does not change much (0.804 -> 0.806)._
 
 ```{r}
 pro_man %>% 
   filter(...1 != 5) %>% 
   summarise(cor(estimated_length, actual_length))
 
-model_2 <- pro_man %>% 
+model_3 <- pro_man %>% 
   filter(...1 != 5) %>% 
   lm(actual_length ~ estimated_length, .)
 
-model_2
+model_3
 ```
 
