@@ -28,7 +28,8 @@ pro_man
 ```{r}
 pro_man %>% 
   ggplot(aes(x=estimated_length, y = actual_length))+
-  geom_point()
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE)
 ```
 
 
@@ -67,6 +68,9 @@ _One outlier value in residuals Vs Leverage which is for the one furthest right 
 _Histogram is relatively normal but would need more data to flesh out._
 
 ```{r}
+# autoplot(model)
+# don't know why that won't go
+
 plot(model)
 hist(resid(model))
 ```
@@ -79,13 +83,63 @@ Return to your plot from earlier, and now label the data points with their row n
 Identify by eye any points you think might be outliers and note their labels.
 Further split your outliers into those you think are ‘influential’ or ‘non-influential’ based on a visual assessment of their leverage.
 
+_Main outlier is point for row 5_
+
+```{r}
+pro_man %>% 
+  ggplot(aes(x=estimated_length, y = actual_length))+
+  geom_point()+
+  geom_text(aes(label = 1:nrow(pro_man)), nudge_x = 0.4)
+```
+
+
 
 Use your model object from earlier and confirm your visual assessment of which points are ‘influential’ or ‘non-influential’ outliers based on Cook’s distance. You can get a useful plot of Cook’s distance by passing argument which = 4 to autoplot(). Or try the base R plot() function for comparison [e.g. plot(model); you can also use par(mfrow = c(2,2)) just before the plot() command to get a nice two-by-two display]!
 
+```{r}
+par(mfrow = c(2,3))
+
+plot(model)
+hist(resid(model))
+```
 
 Obtain the intercept and regression coefficient of variable estimated_length for a simple linear model fitted to data omitting one of your non-influential outlier points.
 How different are the intercept and coefficient from those obtained above by fitting the full data set? Does this support classifying the omitted point as non-influential?
 Plot the data points, this regression line and the regression line for the full data set. How different are the lines?
 
+_50 is very central and in trend_
+Results barely change_
+
+```{r}
+
+pro_man %>% 
+  filter(...1 != 50) %>% 
+  summarise(cor(estimated_length, actual_length))
+
+model_2 <- pro_man %>% 
+  filter(...1 != 50) %>% 
+  lm(actual_length ~ estimated_length, .)
+
+model_2
+
+```
+
+
+
 
 Repeat the procedure above, but this time omitting one of your influential outliers.
+
+_Significant change to results for line plot, correlation does not change much._
+
+```{r}
+pro_man %>% 
+  filter(...1 != 5) %>% 
+  summarise(cor(estimated_length, actual_length))
+
+model_2 <- pro_man %>% 
+  filter(...1 != 5) %>% 
+  lm(actual_length ~ estimated_length, .)
+
+model_2
+```
+
