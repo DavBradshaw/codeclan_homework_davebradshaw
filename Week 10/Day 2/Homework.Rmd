@@ -6,6 +6,10 @@ library(GGally)
 library(ggfortify)
 library(mosaic)
 library(mosaicData)
+library(sf)
+library(rnaturalearth)
+library(leaflet)
+library(raster)
 ```
 
 
@@ -13,7 +17,6 @@ library(mosaicData)
 
 ```{r}
 housing <- read_csv("housing.csv")
-
 housing
 ```
 # We expect the total_rooms of houses to be strongly correlated with total_bedrooms. Use ggpairs() to investigate correlations between these two variables.
@@ -22,27 +25,75 @@ _Correlation of 0.930 proves there is a very strong correlation between these 2 
 
 ```{r}
 housing %>% 
-  select(total_bedrooms, total_rooms) %>% 
-ggpairs()
+  dplyr::select(total_bedrooms, total_rooms) %>% 
+  ggpairs()
 ```
 # So, we do find significant correlations. Let’s drop total_bedrooms from the dataset, and use only total_rooms going forward.
 
 ```{r}
 housing <- housing %>%
-  select(-total_bedrooms)
+  dplyr::select(-total_bedrooms)
 housing
 ```
 
 # We are interested in developing a regression model for the median_house_value of a house in terms of the possible predictor variables in the dataset. Use ggpairs() to investigate correlations between median_house_value and the predictors (this may take a while to run, don’t worry, make coffee or something).
 
 _Strongest correlation is between house value and median income_
-_Other strong correlations are with latitude and longitude which makes sense as data set is for california, plot looks vaguely similar to the shape of California so this may make sense._
+_Other strong correlations are with latitude and longitude which makes sense as data set is for California, plot looks vaguely similar to the shape of California so this may make sense._
 _Population of people residing with total rooms, households all strongly correlated - denser population_
 
 ```{r message=FALSE}
 housing %>% 
   ggpairs()
+
+housing %>% 
+  ggplot(aes(x = latitude, y = longitude))+
+  geom_point(alpha = 0.1)
 ```
+
+```{r}
+
+housing %>% 
+  count(latitude, longitude)
+
+housing %>% filter(latitude == "32.56", longitude == "-117.05")
+
+leaflet(housing %>% filter(latitude == "32.56", longitude == "-117.05")) %>% 
+  addTiles() %>% 
+  addCircleMarkers(lng = ~longitude,
+             lat = ~latitude,
+             clusterOptions = markerClusterOptions(),
+             label = ~median_house_value)
+
+pal <- colorNumeric(palette = c("green", "red"), domain = housing$median_house_value)
+
+#only takes the last value for the given latitude and longitude
+leaflet(housing) %>% 
+  addTiles() %>% 
+  addCircles(lng = ~longitude,
+             lat = ~latitude,
+             label = ~median_house_value,
+             color =  ~pal(housing$median_house_value),
+             fillOpacity = 0.2) %>% 
+  addLegend(pal = pal, values = ~median_house_value)
+
+
+raster <- rasterFromXYZ(housing %>% 
+  dplyr::select(longitude, latitude, median_house_value), crs = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
+
+pal2 <- colorNumeric(c("blue", "red", "yellow"), values(raster),
+  na.color = "transparent")
+
+leaflet() %>% 
+  addTiles() %>% 
+  addRasterImage(raster, colors = pal2, opacity = 0.7) %>% 
+  addLegend(pal = pal2, values = values(raster),
+    title = "Median House Value")
+
+```
+
+
+
 # Perform further ggplot visualisations of any significant correlations you find.
 
 _Definite increase with each other but appears to be some cap on median house value_
@@ -52,12 +103,27 @@ _Data appears normally distributed but a little right skewed_
 ```{r}
 housing %>% 
   ggplot(aes(x = median_income, y = median_house_value)) +
-  geom_point()+
+  geom_point(alpha = 0.2)+
   geom_smooth(method = "lm", se = FALSE)
 
 housing %>% 
   ggplot(aes(x = median_income, y = median_house_value)) +
   geom_ash()
+
+housing %>% 
+  ggplot(aes(x = median_house_value))+
+  geom_histogram()
+
+housing %>% 
+  count(median_house_value) %>% 
+  arrange(desc(n))
+
+housing %>% 
+  filter(median_house_value == 500001)
+
+housing %>% 
+  count(latitude, longitude) %>% 
+  arrange(desc(n))
 
 ```
 # Shortly we may try a regression model to fit the categorical predictor ocean_proximity. Investigate the level of ocean_proximity predictors. How many dummy variables do you expect to get from it?
@@ -123,4 +189,26 @@ housing %>%
   geom_point()+
   geom_smooth(method = "lm", se = FALSE)
 ```
+
+```{r}
+housing %>% 
+  ggplot(aes(x = median_income)) +
+  geom_histogram()
+
+housing %>% 
+  ggplot(aes(x = log(median_income))) +
+  geom_histogram()
+
+housing %>% 
+  ggplot(aes(x = log(log(median_income)))) +
+  geom_histogram()
+```
+
+```{r}
+model1 <- lm(median_house_value ~ ocean_proximity + median_income + log(median_income), housing)
+summary(model1)
+autoplot(model1)
+```
+
+
 
