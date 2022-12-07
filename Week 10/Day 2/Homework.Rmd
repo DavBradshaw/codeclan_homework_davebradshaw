@@ -1,0 +1,126 @@
+```{r}
+library(tidyverse)
+library(janitor)
+library(fastDummies)
+library(GGally)
+library(ggfortify)
+library(mosaic)
+library(mosaicData)
+```
+
+
+# Load the housing_prices.csv data set and undertake an initial exploration of the data. You will find details on the data set on the relevant Kaggle page
+
+```{r}
+housing <- read_csv("housing.csv")
+
+housing
+```
+# We expect the total_rooms of houses to be strongly correlated with total_bedrooms. Use ggpairs() to investigate correlations between these two variables.
+
+_Correlation of 0.930 proves there is a very strong correlation between these 2 variables. Graph of frequency for each instance appears similar in shape. Point plot shows a clear increases line as 1 goes up the other will those more variance may be expected between the two at higher numbers._
+
+```{r}
+housing %>% 
+  select(total_bedrooms, total_rooms) %>% 
+ggpairs()
+```
+# So, we do find significant correlations. Let’s drop total_bedrooms from the dataset, and use only total_rooms going forward.
+
+```{r}
+housing <- housing %>%
+  select(-total_bedrooms)
+housing
+```
+
+# We are interested in developing a regression model for the median_house_value of a house in terms of the possible predictor variables in the dataset. Use ggpairs() to investigate correlations between median_house_value and the predictors (this may take a while to run, don’t worry, make coffee or something).
+
+_Strongest correlation is between house value and median income_
+_Other strong correlations are with latitude and longitude which makes sense as data set is for california, plot looks vaguely similar to the shape of California so this may make sense._
+_Population of people residing with total rooms, households all strongly correlated - denser population_
+
+```{r message=FALSE}
+housing %>% 
+  ggpairs()
+```
+# Perform further ggplot visualisations of any significant correlations you find.
+
+_Definite increase with each other but appears to be some cap on median house value_
+
+_Data appears normally distributed but a little right skewed_
+
+```{r}
+housing %>% 
+  ggplot(aes(x = median_income, y = median_house_value)) +
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE)
+
+housing %>% 
+  ggplot(aes(x = median_income, y = median_house_value)) +
+  geom_ash()
+
+```
+# Shortly we may try a regression model to fit the categorical predictor ocean_proximity. Investigate the level of ocean_proximity predictors. How many dummy variables do you expect to get from it?
+
+_There are 5 options for ocean proximity. Create new columns, drop existing one. Then deselect inland to avoid dummy variable trap_
+
+```{r}
+housing %>% 
+  count(ocean_proximity)
+
+dummy_housing <- housing %>% 
+  fastDummies::dummy_cols(select_columns = "ocean_proximity", remove_selected_columns = TRUE) %>% 
+  clean_names() %>% 
+  select(-ocean_proximity_inland)
+dummy_housing
+```
+# Start with simple linear regression. Regress median_house_value on median_income and check the regression diagnostics.
+
+_P values indicate a high statistical significance to these values relationship_
+_R squared of 0.47 shows income can account for 47% of house value_
+_These two show a strong correlation_
+_Gradient of line will be 41793.8, y intercept is 45085.6_
+_3 flat lines for autoplots indicate model is good and data fits. Normal Q-Q is close to the straight line but has some deviation at the ends_
+
+```{r}
+value_income <- lm(median_house_value ~ median_income, housing)
+
+autoplot(value_income)
+summary(value_income)
+```
+# Add another predictor of your choice. Check your assumptions, diagnostics, and interpret the model.
+
+total_rooms has a p value well over the levels to suggest statistical significance. 
+
+```{r}
+value_income_rooms <- lm(median_house_value ~ median_income + total_rooms, housing)
+
+autoplot(value_income_rooms)
+summary(value_income_rooms)
+```
+2 Extension
+
+# Try adding an interaction between log(median_income) and your chosen categorical predictor. Do you think this interaction term is statistically justified?
+
+_Suprisingly it seems to show a good interaction though minimal change in R squared_
+
+```{r}
+value_income_rooms_log <- lm(median_house_value ~ median_income + total_rooms +log(median_income):total_rooms, housing)
+
+autoplot(value_income_rooms_log) 
+summary(value_income_rooms_log)
+```
+# Find and plot an appropriate visualisation to show the effect of this interaction
+_After answers_
+```{r}
+housing %>% 
+  ggplot(aes(x = median_house_value, y = total_rooms))+
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE)
+
+housing %>% 
+  ggplot(aes(x = log(median_house_value), y = total_rooms))+
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE)
+```
+
