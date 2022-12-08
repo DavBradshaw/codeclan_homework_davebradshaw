@@ -1,0 +1,236 @@
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(GGally)
+library(ggfortify)
+library(modelr)
+```
+
+
+
+
+# 1 MVP
+You are given a set of data on housing sale prices for the last few years in King County (near Seattle) between May 2014 and May 2015.
+
+
+We want you to build an explanatory model for the price of housing in King County, i.e. an interpretable model in which the included variables are statistically justifiable.
+
+The variable definitions are:
+
+id - Unique ID for each home sold
+date - Date of the home sale
+price - Price of each home sold
+bedrooms - Number of bedrooms
+bathrooms - Number of bathrooms, where .5 accounts for a room with a toilet but no shower
+sqft_living - Square footage of the apartments interior living space
+sqft_lot - Square footage of the land space
+floors - Number of floors
+waterfront - A dummy variable for whether the apartment was overlooking the waterfront or not
+view - An index from 0 to 4 of how good the view of the property was
+condition - An index from 1 to 5 on the condition of the apartment
+grade - An index from 1 to 13, where 1-3 falls short of building construction and design, 7 has an average level of construction and design, and 11-13 have a high quality level of construction and design
+sqft_above - The square footage of the interior housing space that is above ground level
+sqft_basement - The square footage of the interior housing space that is below ground level
+yr_built - The year the house was initially built
+yr_renovated - The year of the house’s last renovation
+zipcode - What zipcode area the house is in
+lat - Lattitude
+long - Longitude
+sqft_living15 - The square footage of interior housing living space for the nearest 15 neighbors
+sqft_lot15 - The square footage of the land lots of the nearest 15 neighbors
+
+```{r}
+housing <- read_csv("data/kc_house_data.csv")
+housing
+```
+
+# 2 Question 1
+Tidy up the data ready for regression:
+
+* You might like to think about removing some or all of `date`, `id`, `sqft_living15`, `sqft_lot15` and `zipcode` (`lat` and `long` provide a better measure of location in any event).
+* Have a think about how to treat `waterfront`. Should we convert its type?
+* We converted `yr_renovated` into a `renovated` logical variable, indicating whether the property had ever been renovated. You may wish to do the same.
+* Have a think about how to treat `view`, `condition` and `grade`? Are they interval or categorical ordinal data types?
+
+_Want to end up with price and things that can predict that._
+_sqft_living15 and sqft_lot15 might be good for predicting if this is a larger house than average for the area by using relative to house own statisitics, removed for now_
+_Dates are all from 2014 and 2015, will assume minimal change in value over this time period and remove_
+_Waterfront will mostly be included by view, TRUE/FALSE may be clearer but 1/0 is acceptable. There are only 163 of 21613 variables with this anyway so will add little overall._
+_View, condition and grade can be treated as ordinal data with grade having more datasets looking closer to interval data, transform to character variables to keep separate._
+
+```{r}
+housing %>% 
+  mutate(year_sold = year(date)) %>% 
+  count(year_sold)
+
+housing %>% 
+  count(waterfront)
+
+housing_tidy <- housing %>% 
+  mutate(renovated = as.logical(yr_renovated)) %>% 
+  select(-c(id, date, sqft_lot15, sqft_living15, yr_renovated, waterfront)) %>% 
+  mutate((across(view:grade, as.character)))
+
+housing_tidy
+  
+```
+
+# 3 Question 2
+Check for aliased variables using the alias() function (this takes in a formula object and a data set). [Hint - formula price ~ . says ‘price varying with all predictors’, this is a suitable input to alias()]. Remove variables that lead to an alias. Check the ‘Elements of multiple regression’ lesson for a dropdown containing further information on finding aliased variables in a dataset.
+
+_sqft_basement can be calculated from sqft_above and sqft_lot, this can be dropped with the other columns serving as an alias_
+
+```{r}
+alias(lm(price ~., data = housing_tidy))
+
+housing_tidy <- housing_tidy %>% 
+  select(-sqft_basement)
+housing_tidy
+```
+
+
+
+# 4 Question 3
+Systematically build a regression model containing up to four main effects (remember, a main effect is just a single predictor with coefficient), testing the regression diagnostics as you go * splitting datasets into numeric and non-numeric columns might help ggpairs() run in manageable time, although you will need to add either a price or resid column to the non-numeric dataframe in order to see its correlations with the non-numeric predictors.
+
+```{r}
+housing_tidy_numeric <- housing_tidy %>% 
+  select_if(is.numeric)
+
+housing_tidy_nonnumeric <- housing_tidy %>%
+  select_if(function(x) !is.numeric(x))
+
+housing_tidy_nonnumeric$price <- housing_tidy$price
+
+housing_tidy_numeric
+housing_tidy_nonnumeric
+```
+_Median price increases as view changes_
+_COndition may do the same thing_
+_Grade shows a pattern for the first 5, then a similar pattern for the remaining data_
+_Renovated shows a slight change in median between values_
+```{r, message = FALSE}
+ggpairs(housing_tidy_nonnumeric)
+```
+```{r, message = FALSE}
+ggpairs(housing_tidy_numeric)
+```
+
+_In order the biggest correlations for price are sqft_living, sqft_above (may be an alias for sqft_living, will leave it for now), bathrooms, bedrooms, latitude, floors__
+
+
+```{r}
+model1a <- lm(price ~ sqft_living, housing)
+summary(model1a)
+model1b <- lm(price ~ bathrooms, housing)
+summary(model1b)
+model1c <- lm(price ~ bedrooms, housing)
+summary(model1c)
+model1d <- lm(price ~ lat, housing)
+summary(model1d)
+model1e <- lm(price ~ floors, housing)
+summary(model1e)
+
+autoplot(model1a)
+```
+_R^2 at 0.49 is a good start_
+
+```{r, message=FALSE}
+
+housing_resid <- housing_tidy_numeric %>% 
+  add_residuals(model1a) %>% 
+  select(-sqft_living, -price)
+
+housing_resid %>% 
+  select(resid, everything()) %>% 
+  ggpairs()
+
+```
+_In order lat, long. yr_built and bedrooms_
+
+```{r}
+model2a <- lm(price ~ sqft_living + lat, housing)
+summary(model2a)
+model2b <- lm(price ~ sqft_living + long, housing)
+summary(model2b)
+model2c <- lm(price ~ sqft_living + yr_built, housing)
+summary(model2c)
+model2d <- lm(price ~ sqft_living + bedrooms, housing)
+summary(model2d)
+
+autoplot(model2a)
+```
+
+```{r, message = FALSE}
+
+housing_resid <- housing_tidy_numeric %>% 
+  add_residuals(model2a) %>% 
+  select(-sqft_living, -price, -lat)
+
+housing_resid %>% 
+  select(resid, everything()) %>% 
+  ggpairs()
+
+```
+
+
+```{r}
+model3a <- lm(price ~ sqft_living + lat + yr_built, housing)
+summary(model3a)
+model3b <- lm(price ~ sqft_living + lat + long, housing)
+summary(model3b)
+model3c <- lm(price ~ sqft_living + lat + bedrooms, housing)
+summary(model3c)
+
+
+autoplot(model3a)
+```
+
+yr_built was next best predictor.
+```{r, message=FALSE}
+
+housing_resid <- housing_tidy_numeric %>% 
+  add_residuals(model2a) %>% 
+  select(-sqft_living, -price, -lat, -yr_built)
+
+housing_resid %>% 
+  select(resid, everything()) %>% 
+  ggpairs()
+
+```
+
+
+```{r}
+model4a <- lm(price ~ sqft_living + lat + yr_built + long, housing)
+summary(model4a)
+model4b <- lm(price ~ sqft_living + lat + yr_built + bedrooms, housing)
+summary(model4b)
+
+
+
+autoplot(model3a)
+```
+
+
+```{r}
+final_model <- lm(price ~ sqft_living + lat + yr_built + bedrooms, housing)
+summary(final_model)
+
+autoplot(final_model)
+```
+
+
+Remember, if you are not sure whether including a categorical predictor is statistically justified, run an anova() test passing in the models with- and without the categorical predictor and check the p-value of the test.
+
+
+
+
+
+
+
+# 5 Extensions - think this is from the flipped lesson for today
+Consider possible interactions between your four main effect predictors and test their effect upon r2. Choose your best candidate interaction and visualise its effect.
+
+Calculate the relative importance of predictors from your best 4-predictor model (i.e. the model without an interaction). Which predictor affects price most strongly?
