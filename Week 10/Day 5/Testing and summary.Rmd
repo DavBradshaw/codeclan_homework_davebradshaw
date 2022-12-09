@@ -1,0 +1,89 @@
+
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(ggfortify)
+library(GGally)
+library(leaps)
+library(modelr)
+library(caret)
+```
+
+```{r}
+avocados_tidy_no_region <- read_csv(here::here("data/clean_avocado.csv"))
+```
+The best simple model for predicting the price of avocados can be built using;
+* the type of avocado (organic or conventional)
+* the ratio of large avocado sales to total avocado sales
+* the month of sale
+* the ratio of large bags sold to total bags sold
+* the year
+* the number of large avocados sold
+
+The region was disregarded allowing this model to be practiced over the full region of the data set.
+
+
+```{r}
+
+model6c <- lm(average_price ~ type + ratio_large_sold + month + ratio_large_bags + year + large_sold, avocados_tidy_no_region)
+summary(model6c)
+
+```
+
+
+```{r}
+#15 columns with na values caused by 0 total bags being sold, should have caught earlier but will remove for testing
+avocados_tidy_no_region[!complete.cases(avocados_tidy_no_region), ]
+
+nrow(avocados_tidy_no_region)
+
+avocados_tidy_no_region <- avocados_tidy_no_region %>% 
+  drop_na()
+
+```
+
+
+
+# k fold cross validation
+
+```{r}
+
+cv_10_fold <- trainControl(
+  method = "cv",# cross validation
+  number = 10,
+  savePredictions = TRUE
+)
+
+
+train_model <- train(average_price ~type + ratio_large_sold + month + ratio_large_bags + year + large_sold,
+                     data = avocados_tidy_no_region,
+                     trControl = cv_10_fold,
+                     method = "lm")
+
+summary(train_model)
+
+train_model$pred
+train_model$resample
+
+
+train_model$pred %>% 
+  group_by(Resample) %>% 
+  mutate(sq_resid = (pred - obs) ** 2) %>% 
+  summarise(mean(sq_resid) ** 0.5)
+#difference in predictions across the 10 models from Kcross validation
+train_model$pred %>% 
+  group_by(Resample) %>% 
+  mutate(sq_resid = (pred - obs) ** 2) %>% 
+  summarise(mean = mean(sq_resid) ** 0.5) %>% 
+  summarise(range = max(mean)-min(mean))
+
+
+train_model$resample %>% 
+  summarise(av_r2 = mean(Rsquared),
+            av_rmse = mean(RMSE))
+
+
+```
+In the series of models I ran the difference using the prediction model chosen for K cross validation is just over 1 pence.

@@ -1,0 +1,43 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+#1 I want to predict how well 6 year-olds are going to do in their final school exams. Using the following variables am I likely under-fitting, fitting well or over-fitting? Postcode, gender, reading level, score in maths test, date of birth, family income.
+
+Potentially reasonably well fitting, would require feature engineering for what is trying to be done.
+But using 6 year olds data to predict final school exams would require more info which would build over the years so underfitting overall.
+
+Postcode - overfitting using a full postcode. If split to only first section e.g. EH or EH1 it might be a predictor of better schools which could be valid. Would require examination and feature engineering.
+Gender - probably of use as females tend to achive better results than males. 
+Reading level and score in maths test - may be of use as an early indicator of capability
+Date of birth - Older students in the year likely to gain advantage if grade splitting done early. Would group by month at least to not overfit this.
+family income - More likely to wind up at a private school, additional tutoring etc. could be useful.
+
+#2 If I have two models, one with an AIC score of 34,902 and the other with an AIC score of 33,559 which model should I use?
+
+Lower AIC score (33559)
+
+#3 I have two models, the first with: r-squared: 0.44, adjusted r-squared: 0.43. The second with: r-squared: 0.47, adjusted r-squared: 0.41. Which one should I use?
+
+The first model. Second is overfit.
+
+#4 I have a model with the following errors: RMSE error on test set: 10.3, RMSE error on training data: 10.4. Do you think this model is over-fitting?
+
+No. 10.4 and 10.3 are very close and normal variation would probably account for 0.1 difference.
+
+#5 How does k-fold validation work?
+
+Split data into k sets (normally 10). Then use 9 of the sets as training data for the model before testing of the 10th. Re-iterating through all k sets as the test set. Can test for overfitting of a model if variation between the data sets (mean RMSE) is high.
+
+#6 What is a validation set? When do you need one?
+
+A set of data kept separate from the training data used to build the model. To avoid leaks from fitting to the full data set so that predicting future values is improved. Use it as a final measure of accuracy.
+
+#7 Describe how backwards selection works.
+
+Add everything to the model and remove the things that seem to add the least value to the model.
+
+#8 Describe how best subset selection works.
+
+Running an exhaustive search of all variables to find an optimal model.

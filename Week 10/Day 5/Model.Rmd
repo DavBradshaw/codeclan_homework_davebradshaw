@@ -1,0 +1,375 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(ggfortify)
+library(GGally)
+library(leaps)
+library(modelr)
+```
+
+```{r}
+avocados_tidy_no_region <- read_csv(here::here("data/clean_avocado.csv"))
+```
+
+
+```{r}
+automodel <- regsubsets(average_price ~.,
+                                 data = avocados_tidy_no_region,
+                                 nvmax = 8,
+                                 method = "exhaustive")
+
+sum_forward <- summary(automodel)
+
+sum_forward
+```
+
+As an exploratory glance models including type, ratio_large_bags, ratio_large_sold, ratio_small_sold, month and year.
+
+```{r}
+automodel_region <- regsubsets(average_price ~.,
+                                 data = avocados_tidy,
+                                 nvmax = 8,
+                                 method = "forward")
+
+sum_forward2 <- summary(automodel_region)
+
+sum_forward2
+```
+
+
+When leaving region in only Houston was identified as an input by the automodel.
+
+# 1st round of modeling
+
+_Type has a 0.38 r^2. A good starting point would be to build a model based on type_
+```{r}
+
+model1a <- lm(average_price ~ type, avocados_tidy_no_region)
+summary(model1a)
+
+model1b <- lm(average_price ~ ratio_small_sold, avocados_tidy_no_region)
+summary(model1b)
+
+model1c <- lm(average_price ~ ratio_large_sold, avocados_tidy_no_region)
+summary(model1c)
+
+model1d <- lm(average_price ~ total_volume, avocados_tidy_no_region)
+summary(model1d)
+
+model1e <- lm(average_price ~ year, avocados_tidy_no_region)
+summary(model1e)
+```
+Autoplot doesn't help much for a 2 option variable but normal Q-Q looks normal enough.
+
+```{r}
+
+autoplot(model1a)
+
+```
+From this part of the ggpairs on the residual data it would be good to look at small sold, large bags and total_volume
+
+```{r, message = FALSE}
+price_resid <- avocados_tidy_no_region %>% 
+  add_residuals(model1a) %>% 
+  add_predictions(model1a) %>% 
+  select(-average_price, -type)
+
+price_resid %>% 
+  select(resid, total_volume:x_large_bags) %>%
+  ggpairs()
+
+```
+
+4 very promising categories here for ratio small/large and bags small/large.
+
+```{r, message = FALSE}
+
+price_resid %>% 
+  select(resid, year:ratio_large_bags) %>% 
+  ggpairs()
+
+```
+
+# 2nd round of modeling
+
+```{r}
+
+model2a <- lm(average_price ~ type + ratio_large_sold, avocados_tidy_no_region)
+summary(model2a)
+
+model2a <- lm(average_price ~ type + ratio_small_sold, avocados_tidy_no_region)
+summary(model2a)
+
+model2a <- lm(average_price ~ type + ratio_small_bags, avocados_tidy_no_region)
+summary(model2a)
+
+model2a <- lm(average_price ~ type + ratio_large_bags, avocados_tidy_no_region)
+summary(model2a)
+
+```
+
+```{r}
+
+autoplot(model2a)
+
+```
+
+
+Best additional item to fit to the data is ratio_large_sold. This can be an alias for ratio small_sold and ratio_x_large_sold, if one of these is added as a best fit the other must be removed. Likewise large_sold may not add much with this variable already in place.
+
+```{r, message = FALSE}
+price_resid_2 <- avocados_tidy_no_region %>% 
+  add_residuals(model2a) %>% 
+  add_predictions(model2a) %>% 
+  select(-average_price, -type, - ratio_large_sold)
+
+price_resid_2 %>% 
+  select(resid, total_volume:x_large_bags) %>%
+  ggpairs()
+
+```
+
+
+```{r, message = FALSE}
+
+price_resid_2 %>% 
+  select(resid, year:ratio_x_large_bags) %>% 
+  ggpairs()
+
+```
+
+# 3rd round of modeling
+
+```{r}
+
+model3a <- lm(average_price ~ type + ratio_large_sold + ratio_small_sold, avocados_tidy_no_region)
+summary(model3a)
+
+model3b <- lm(average_price ~ type + ratio_large_sold + year, avocados_tidy_no_region)
+summary(model3b)
+
+model3c <- lm(average_price ~ type + ratio_large_sold + month, avocados_tidy_no_region)
+summary(model3c)
+
+model3d <- lm(average_price ~ type + ratio_large_sold + small_sold, avocados_tidy_no_region)
+summary(model3d)
+
+model3e <- lm(average_price ~ type + ratio_large_sold + x_large_sold, avocados_tidy_no_region)
+summary(model3e)
+
+```
+
+Model3c adding month looks to be the next best predictor
+
+```{r}
+
+autoplot(model3c)
+
+price_resid_2 %>% 
+  ggplot(aes(x = month, y = resid))+
+  geom_point()
+
+coplot(resid ~ month | year,
+       panel = function(x,y, ...){
+         points(x,y)
+         abline(lm(y ~x), col = "blue")
+       },
+       data = price_resid_2, rows = 1)
+
+model3c2 <- lm(average_price ~ type + ratio_large_sold + month:year, avocados_tidy_no_region)
+summary(model3c2)
+#maybe month:year is better than month alone, will test this in next set
+
+```
+
+```{r, message= FALSE}
+price_resid_3 <- avocados_tidy_no_region %>% 
+  add_residuals(model3c) %>% 
+  add_predictions(model3c) %>% 
+  select(-average_price, -type, - ratio_large_sold, -month)
+
+price_resid_3 %>% 
+  select(resid, total_volume:large_bags) %>%
+  ggpairs()
+```
+
+
+```{r, message= FALSE}
+price_resid_3 %>% 
+  select(resid, x_large_bags:ratio_x_large_bags) %>% 
+  ggpairs()
+```
+
+# 4th round of modeling
+
+```{r}
+
+model4a <- lm(average_price ~ type + ratio_large_sold + month + ratio_large_bags, avocados_tidy_no_region)
+summary(model4a)
+
+model4b <- lm(average_price ~ type + ratio_large_sold + month + ratio_small_bags, avocados_tidy_no_region)
+summary(model4b)
+
+model4c <- lm(average_price ~ type + ratio_large_sold + month + year, avocados_tidy_no_region)
+summary(model4c)
+
+model4d <- lm(average_price ~ type + ratio_large_sold + month + small_sold, avocados_tidy_no_region)
+summary(model4d)
+
+
+```
+Adding ratio_large_bags proved most effective which helps for simlicity as the amount of large_sold is already in the model
+
+```{r, message= FALSE}
+price_resid_4 <- avocados_tidy_no_region %>% 
+  add_residuals(model4a) %>% 
+  add_predictions(model4a) %>% 
+  select(-average_price, -type, - ratio_large_sold, -month, -ratio_large_sold)
+
+price_resid_4 %>% 
+  select(resid, total_volume:large_bags) %>%
+  ggpairs()
+```
+
+
+```{r, message= FALSE}
+price_resid_4 %>% 
+  select(resid, x_large_bags:ratio_x_large_bags) %>% 
+  ggpairs()
+```
+
+# 5th round of modeling
+
+```{r}
+
+model5a <- lm(average_price ~ type + ratio_large_sold + month + ratio_large_bags + year, avocados_tidy_no_region)
+summary(model5a)
+
+model5b <- lm(average_price ~ type + ratio_large_sold + month + ratio_large_bags + large_sold, avocados_tidy_no_region)
+summary(model5b)
+
+model5c <- lm(average_price ~ type + ratio_large_sold + month + ratio_large_bags + x_large_sold, avocados_tidy_no_region)
+summary(model5c)
+
+model5d <- lm(average_price ~ type + ratio_large_sold + month + ratio_large_bags + small_sold, avocados_tidy_no_region)
+summary(model5d)
+
+model5e <- lm(average_price ~ type + ratio_large_sold + month + ratio_large_bags + total_volume, avocados_tidy_no_region)
+summary(model5e)
+
+```
+year is the best addition
+
+```{r, message= FALSE}
+price_resid_5 <- avocados_tidy_no_region %>% 
+  add_residuals(model5a) %>% 
+  add_predictions(model5a) %>% 
+  select(-average_price, -type, - ratio_large_sold, -month, -ratio_large_sold, -year)
+
+price_resid_5 %>% 
+  select(resid, total_volume:large_bags) %>%
+  ggpairs()
+```
+
+
+```{r, message= FALSE}
+price_resid_5 %>% 
+  select(resid, x_large_bags:ratio_x_large_bags) %>% 
+  ggpairs()
+```
+
+
+
+# 6th round of modeling
+
+
+```{r}
+model6a <- lm(average_price ~ type + ratio_large_sold + month + ratio_large_bags + year + total_volume, avocados_tidy_no_region)
+summary(model6a)
+
+model6b <- lm(average_price ~ type + ratio_large_sold + month + ratio_large_bags + year + small_sold, avocados_tidy_no_region)
+summary(model6b)
+
+model6c <- lm(average_price ~ type + ratio_large_sold + month + ratio_large_bags + year + large_sold, avocados_tidy_no_region)
+summary(model6c)
+
+model6d <- lm(average_price ~ type + ratio_large_sold + month + ratio_large_bags + year + x_large_sold, avocados_tidy_no_region)
+summary(model6d)
+
+model6e <- lm(average_price ~ type + ratio_large_sold + month + ratio_large_bags + year + small_bags, avocados_tidy_no_region)
+summary(model6e)
+
+```
+
+For simplicity rather than taking the best variable to add (small_sold) will continue to add large advocado variable as there is a minimal difference in this addition 0.5628 Vs 0.5626. Would rather retain some simplicity in the model.
+
+```{r}
+
+model6c <- lm(average_price ~ type + ratio_large_sold + month + ratio_large_bags + year + large_sold, avocados_tidy_no_region)
+summary(model6c)
+
+```
+
+```{r, message= FALSE}
+price_resid_6 <- avocados_tidy_no_region %>% 
+  add_residuals(model6c) %>% 
+  add_predictions(model6c) %>% 
+  select(-average_price, -type, - ratio_large_sold, -month, -ratio_large_sold, -year, -large_sold)
+
+price_resid_6 %>% 
+  select(resid, total_volume:large_bags) %>%
+  ggpairs()
+```
+
+```{r, message= FALSE}
+price_resid_6 %>% 
+  select(resid, x_large_bags:ratio_x_large_bags) %>% 
+  ggpairs()
+```
+
+
+# 7th round of modeling
+
+```{r}
+
+model7a <- lm(average_price ~ type + ratio_large_sold + month + ratio_large_bags + year + large_sold + ratio_small_sold, avocados_tidy_no_region)
+summary(model7a)
+
+model7b <- lm(average_price ~ type + ratio_large_sold + month + ratio_large_bags + year + large_sold + ratio_x_large_bags, avocados_tidy_no_region)
+summary(model7b)
+
+model7c <- lm(average_price ~ type + ratio_large_sold + month + ratio_large_bags + year + large_sold + ratio_x_large_sold, avocados_tidy_no_region)
+summary(model7c)
+
+model7d <- lm(average_price ~ type + ratio_large_sold + month + ratio_large_bags + year + large_sold + x_large_bags, avocados_tidy_no_region)
+summary(model7d)
+
+```
+
+Best addition was to add ratio_x_large_sold but this only added 0.0008 to the multiple r squared value. Call this the point where we have seem diminishing returns and focus on model up to this point. Model6c to be tested.
+
+
+```{r}
+broom::glance(model1a)
+broom::glance(model2a)
+broom::glance(model3c)
+broom::glance(model4a)
+broom::glance(model5a)
+broom::glance(model6c)
+
+```
+
+adjusted r^2 increases throughout modeling process. AIC and BIC both decrease throughout modeling process indicate model is not overfit. 
+
+```{r}
+anova(model6c, model5a)
+```
+
+Annova shows that final model is significantly statistically impoved for predicting average_price than the previous model.

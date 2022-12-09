@@ -88,6 +88,7 @@ alias(lm(price ~., data = housing_tidy))
 housing_tidy <- housing_tidy %>% 
   select(-sqft_basement)
 housing_tidy
+
 ```
 
 
@@ -116,6 +117,8 @@ ggpairs(housing_tidy_nonnumeric)
 ```
 ```{r, message = FALSE}
 ggpairs(housing_tidy_numeric)
+
+
 ```
 
 _In order the biggest correlations for price are sqft_living, sqft_above (may be an alias for sqft_living, will leave it for now), bathrooms, bedrooms, latitude, floors__
@@ -210,7 +213,7 @@ summary(model4b)
 
 
 
-autoplot(model3a)
+autoplot(model4b)
 ```
 
 
@@ -219,6 +222,11 @@ final_model <- lm(price ~ sqft_living + lat + yr_built + bedrooms, housing)
 summary(final_model)
 
 autoplot(final_model)
+```
+
+```{r}
+modelall <- lm(price ~ ., housing)
+summary(modelall)
 ```
 
 

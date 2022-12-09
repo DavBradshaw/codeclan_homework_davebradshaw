@@ -1,0 +1,87 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(ggfortify)
+library(GGally)
+```
+# Data familiarisation
+```{r}
+avocados <- read_csv(here::here("data/avocado.csv")) %>% 
+  clean_names() %>% 
+  rename(small_sold = x4046, large_sold = x4225, x_large_sold = x4770)
+# data is over 4 years
+avocados %>% 
+  count(year)
+# no NA data in region but 54 variables, some appear to be region summaries rather than more localised
+avocados %>% 
+  count(region)
+
+summary(avocados)
+```
+
+# Data cleaning for analysis
+
+Some of these created columns will be alias for each other would only want to model on 1 ratio column or 1 sold column plus total fine on top.
+```{r}
+# create ratio for three sizes of avocado sales and bags
+
+avocados_tidy <- avocados %>% 
+  mutate(month = month(date, label = TRUE, abbr = FALSE)) %>% 
+  mutate(ratio_small_sold = small_sold/total_volume,
+         ratio_large_sold = large_sold/total_volume,
+         ratio_x_large_sold = x_large_sold/total_volume,
+         ratio_small_bags = small_bags/total_bags,
+         ratio_large_bags = large_bags/total_bags,
+         ratio_x_large_bags = x_large_bags/total_bags) %>% 
+  select(-c(date, x1))
+
+summary(avocados_tidy)
+
+avocados_tidy_no_region <- avocados_tidy %>% 
+  select(-region)
+
+write_csv(avocados_tidy_no_region, here::here("data/clean_avocado.csv"))
+```
+
+
+# Initial modelling
+
+_Small_sold, small_bags and total volume to explore_
+
+```{r, message = FALSE}
+avocados_tidy %>% 
+  select(average_price, total_volume:x_large_bags) %>% 
+  ggpairs()
+```
+_Type is definately worth looking at, year and month might be of interest_
+
+```{r, message = FALSE}
+avocados_tidy %>% 
+  select(average_price, type, year, month) %>% 
+  ggpairs()
+```
+_ratio of small sold and ratio of xl bags may be of interest_
+
+```{r, message = FALSE}
+avocados_tidy %>% 
+  select(average_price, ratio_small_sold:ratio_x_large_bags) %>% 
+  ggpairs()
+```
+
+Chosen variable does not appear significantly more normally distributed when log applied (right skewed data). Will retain as normal value for simplicity.
+
+```{r}
+avocados_tidy %>% 
+  ggplot(aes(x = log(average_price)))+
+  geom_histogram()
+
+avocados_tidy %>% 
+  ggplot(aes(x = average_price))+
+  geom_histogram()
+```
+
