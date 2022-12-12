@@ -372,4 +372,4 @@ adjusted r^2 increases throughout modeling process. AIC and BIC both decrease th
 anova(model6c, model5a)
 ```
 
-Annova shows that final model is significantly statistically impoved for predicting average_price than the previous model.
+Annova shows that final model is significantly statistically improved for predicting average_price than the previous model.
