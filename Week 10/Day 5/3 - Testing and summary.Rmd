@@ -15,6 +15,12 @@ library(caret)
 avocados_tidy_no_region <- read_csv(here::here("data/clean_avocado.csv"))
 
 avocados_tidy_with_region <- read_csv(here::here("data/clean_avocado_with_region.csv"))
+
+justUS <- avocados_tidy_with_region %>% 
+  filter(region == "TotalUS")
+
+regional <- avocados_tidy_with_region %>% 
+  filter(region %in% c("TotalUS", "Midsouth", "Northeast", "Plains", "SouthCentral", "Southeast", "West", "GreatLakes", "California"),)
 ```
 The best simple model for predicting the price of avocados can be built using;
 * the type of avocado (organic or conventional)
@@ -26,7 +32,7 @@ The best simple model for predicting the price of avocados can be built using;
 
 The region was disregarded allowing this model to be practiced over the full region of the data set.
 
-_After review seeing region in the model chose to add this in and see how it looks, defiantely has an affect and should have kept this in the model._
+_After review seeing region in the model chose to add this in and see how it looks, definitely has an affect and should have kept this in the model._
 ```{r}
 
 model6c <- lm(average_price ~ type + ratio_large_sold + month + ratio_large_bags + year + large_sold, avocados_tidy_no_region)
@@ -35,6 +41,13 @@ summary(model6c)
 
 modelpostreview <- lm(average_price ~ type + ratio_large_sold + month + ratio_large_bags + year + large_sold + region, avocados_tidy_with_region)
 summary(modelpostreview)
+# for the total US data only
+modeljustUS <- lm(average_price ~ type + ratio_large_sold + month + ratio_large_bags + year + large_sold, justUS)
+summary(modeljustUS)
+# for the big regions only not counting the small subsets
+modelbigregions <- lm(average_price ~ type + ratio_large_sold + month + ratio_large_bags + year + large_sold + region, regional)
+summary(modelbigregions)
+
 
 ```
 

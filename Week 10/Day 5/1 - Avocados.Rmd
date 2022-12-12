@@ -11,6 +11,7 @@ library(GGally)
 ```
 # Data familiarisation
 ```{r}
+
 avocados <- read_csv(here::here("data/avocado.csv")) %>% 
   clean_names() %>% 
   rename(small_sold = x4046, large_sold = x4225, x_large_sold = x4770)
@@ -22,7 +23,17 @@ avocados %>%
   count(region)
 
 summary(avocados)
+
 ```
+
+```{r}
+avocados %>% 
+  mutate(totals_check = (small_sold + large_sold + x_large_sold + total_bags)) %>% 
+  select (total_volume, totals_check) %>% 
+  mutate(difference = total_volume - totals_check) %>% 
+  arrange(desc(difference))
+```
+
 
 # Data cleaning for analysis
 
@@ -44,6 +55,8 @@ summary(avocados_tidy)
 
 avocados_tidy_no_region <- avocados_tidy %>% 
   select(-region)
+
+write_csv(avocados_tidy, here::here("data/clean_avocado_with_region.csv"))
 
 write_csv(avocados_tidy_no_region, here::here("data/clean_avocado.csv"))
 ```
