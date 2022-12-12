@@ -86,4 +86,4 @@ train_model$resample %>%
 
 
 ```
-In the series of models I ran the difference using the prediction model chosen for K cross validation is just over 1 pence.
+In the series of models I ran the difference in average residuals (range) using the prediction model chosen for K cross validation is just over 1 pence.
