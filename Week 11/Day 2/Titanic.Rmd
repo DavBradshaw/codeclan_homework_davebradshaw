@@ -1,0 +1,339 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+
+library(rpart)
+library(rpart.plot)
+library(tidyverse)
+library(GGally)
+
+library(tidyverse)
+titanic_set <- read_csv('data/titanic_decision_tree_data.csv')
+
+shuffle_index <- sample(1:nrow(titanic_set))
+
+# shuffle the data so class order isn't in order - need this for training/testing split later on 
+titanic_set <- titanic_set[shuffle_index, ]
+```
+
+```{r}
+titanic_clean <- titanic_set %>% 
+  drop_na(survived) %>% 
+  select(c(pclass, sex, age, sib_sp, parch, fare, embarked, survived)) %>% 
+  mutate(pclass = factor(pclass, levels = c(3,2,1), labels = c("low", "middle", "high")),
+         age_status = as.factor(if_else(age < 17, "child", "adult")),
+         embarked = as.factor(embarked),
+         survived = factor(survived, levels = c(0,1), labels = c("Dead as a Dodo", "Live and kicking")),
+         sex = as.factor(sex)) %>% 
+  drop_na()
+```
+
+```{r}
+titanic_clean
+```
+
+```{r, message=FALSE}
+
+titanic_clean %>% 
+  select(survived, pclass:sib_sp) %>% 
+  ggpairs()
+
+titanic_clean %>% 
+  select(survived, parch:age_status) %>% 
+  ggpairs()
+
+```
+_Passenger class and sex vary to a large degree_
+_Age and sibsp appear to have similar median values and ranges for the boxplot_
+_Parch may be of interest_
+_Fare, embarked and age_status also show something_
+
+Overall 288 survived and 424 died. 1:1.5.
+```{r}
+titanic_clean %>% 
+  count(survived)
+
+titanic_clean %>% 
+  ggplot(aes(x = survived, y = pclass))+
+  geom_jitter()
+
+titanic_clean %>% 
+  ggplot(aes(x = survived, y = sex))+
+  geom_jitter()
+
+titanic_clean %>% 
+  ggplot(aes(x = survived, y = age))+
+  geom_jitter()
+```
+More of the lower class died than survived whereas more of the upper class survived than died.
+```{r}
+
+titanic_clean %>% 
+  group_by(pclass) %>% 
+  count(survived) %>% 
+  summarise(survived, survival_rate = n/nrow(titanic_clean))
+
+titanic_clean %>% 
+  ggplot(aes(x = survived, y = pclass))+
+  geom_jitter()
+
+```
+More females survived at a higher rate than males.
+```{r}
+
+titanic_clean %>% 
+  group_by(sex) %>% 
+  count(survived) %>% 
+  summarise(survived, survival_rate = n/nrow(titanic_clean))
+
+titanic_clean %>% 
+  ggplot(aes(x = survived, y = sex))+
+  geom_jitter()
+
+```
+There is some difference based on where people embarked but the majority were in Southampton. 
+
+```{r}
+
+titanic_clean %>% 
+  group_by(embarked) %>% 
+  count(survived) %>% 
+  summarise(survived, survival_rate = n/nrow(titanic_clean))
+
+titanic_clean %>% 
+  ggplot(aes(x = survived, y = embarked))+
+  geom_jitter()
+
+```
+
+Children seem to survive at a similar rate to die but adults are much lower.
+
+```{r}
+
+titanic_clean %>% 
+  group_by(age_status) %>% 
+  count(survived) %>% 
+  summarise(survived, survival_rate = n/nrow(titanic_clean))
+
+titanic_clean %>% 
+  ggplot(aes(x = survived, y = age_status))+
+  geom_jitter()
+
+```
+
+Maybe some of in sib_sp, quite similar but just more dead than alive
+
+```{r}
+titanic_clean %>% 
+  ggplot(aes(x = survived, y = sib_sp))+
+  geom_jitter()
+```
+
+More dead for this split but maybe a similar pattern
+
+
+```{r}
+titanic_clean %>% 
+  ggplot(aes(x = survived, y = parch))+
+  geom_jitter()
+```
+
+Seems like for survivors may have paid more for tickets.
+
+```{r}
+titanic_clean %>% 
+  ggplot(aes(x = survived, y = fare))+
+  geom_jitter()
+```
+
+maybe more survived at lower ages?
+
+```{r}
+titanic_clean %>% 
+  ggplot(aes(x = survived, y = age))+
+  geom_jitter()
+```
+
+_Would think that p-class, sex, fare may be good things to work from, fare may be an alias for p-class_
+
+From graph below it probably is so will remove it
+```{r}
+titanic_clean %>% 
+  ggplot(aes(x = pclass, y = fare))+
+  geom_jitter()
+```
+
+
+```{r}
+titanic_clean <- titanic_clean %>% 
+  select(-fare)
+```
+
+Model building
+
+Models are very balanced
+```{r}
+n_data <- nrow(titanic_clean)
+# comment out to keep same set if re-ran
+set.seed(23)
+
+test_index <- sample(1:n_data, size = n_data * 0.2)
+
+titanic_test <- titanic_clean %>% 
+  slice(test_index)
+
+titanic_train <- titanic_clean %>% 
+  slice(-test_index)
+
+titanic_test %>% 
+  janitor::tabyl(survived)
+
+titanic_train %>% 
+  janitor::tabyl(survived)
+```
+
+
+```{r}
+titanic_fit <- rpart(
+  formula = survived ~.,#use everything available
+  data = titanic_train,
+  method = "class"
+)
+
+rpart.plot(titanic_fit,
+           yesno = 2,
+           fallen.leaves = TRUE,
+           faclen = 6,
+           digits = 4,
+           type = 4,
+           extra = 101,
+           cex = 0.4)
+
+```
+
+Biggest differential is based on sex with 64% of passengers male, only 74 VS 291 survive. For 36% of passengers (female) only 48 died to 157.
+
+For the males being under 18 was the next biggest factor for survival with the overwhelming majority of males over 18 dying (284 vs 56). 
+
+Next for males having <3 siblings or spouses on board is of high interest as from this group all 18 survived while all 10 with >3 died.
+
+For females the main aspect was class with the majority of middle and upper class women surviving (7 dead to 119 alive).
+
+From there women embarking in Southampton were more likely to die then from any other port.
+
+
+
+IT WAS THIS THEN SEED CHANGED WHEN I HAD TO RESTART
+
+Based on this decision tree the main differential is on sex with men more likely to die than women.
+The next major factor is the class the passenger was travelling in with low class individuals more likely to die than middle or high class. This is only for females though.
+From there age is next with older than 38.6 being more likely to die than otherwise. This is only for females in lower class.
+From there age < 6.6 is likely to aid survival.
+From having multiple siblings is a negative influence.
+Then age rears up again and women under 27.6 are more likely to survive.
+
+Gender, Class and Age are the main predictors in this model.
+
+Only 6 rich women out of 125 died. 
+
+Men mostly die, with 63.68% of the full population male, 288 out of 363 men did not survive.
+
+
+
+
+```{r}
+library(modelr)
+
+titanic_test_pred <- titanic_test %>% 
+  add_predictions(titanic_fit, type = "class")
+
+library(yardstick)
+
+conf_mat <- titanic_test_pred %>% 
+  conf_mat(truth = survived,
+           estimate = pred)
+
+conf_mat
+
+titanic_test_pred %>% 
+  count(survived == pred)
+
+
+```
+
+In this model 110 of the test oberservations (total 142) or 77.6% of observations were correct.
+
+Overall accuracy is 0.776.
+Sensitivity is 0.917
+Specificity is 0.561
+
+This model is better at predicting that people who died would be likely candidates to not survive (positive = dead). Makes sense as there are more data points on this side to train the data on.
+```{r}
+
+accuracy <- titanic_test_pred %>% 
+  accuracy(truth = survived,
+           estimate = pred)
+
+accuracy
+
+sensitivity <- titanic_test_pred %>% 
+  sensitivity(truth = survived,
+           estimate = pred)
+
+sensitivity
+
+specificity <- titanic_test_pred %>% 
+  specificity(truth = survived,
+           estimate = pred)
+
+specificity
+
+library(caret)
+
+confusionMatrix(titanic_test_pred$pred,
+                titanic_test_pred$survived)
+
+
+
+
+```
+
+
+```{r}
+
+library(ranger)
+
+control <- trainControl(
+  method = "repeatedcv", 
+  number = 5, 
+  repeats = 10
+)
+
+tune_grid = expand.grid(
+  mtry = 1:6,
+  splitrule = c("gini", "extratrees"),
+  min.node.size = c(1, 3, 5)
+)
+
+```
+
+```{r}
+
+rf_tune <- train(
+  survived ~ ., 
+  data = titanic_train, 
+  method = "ranger",
+  metric = "Kappa",
+  num.trees = 1000,
+  importance = "impurity",
+  tuneGrid = tune_grid, 
+  trControl = control
+)
+
+plot(rf_tune)
+rf_tune
+
+```
+
