@@ -1,0 +1,145 @@
+
+```{r}
+library(tidyverse)
+library(factoextra)
+library(janitor)
+library(ggrepel)
+```
+# Clustering homework
+# You have been provided some customer data from a shopping centre. Do some exploratory analysis on the data. Comment on findings.
+
+Customer id is just a sequential value.
+Gender is split 112 Female, 88 Male.
+Age ranges from 18 to 70, median of 36 and a right skew to the data.
+
+Annual income ranges from 15k to 137k, median of 62k and again a right skew to the data.
+
+Spending score ranges from 1 to 99 with an median score of 50. Data has multiple peaks visible in histogram but appears quite normal overall through boxplot. 
+```{r}
+customers <- read_csv("data/mall_customers.csv") %>% 
+  clean_names() %>% 
+  select(-customer_id)
+
+summary(customers)
+
+customers %>% 
+  count(gender)
+
+customers %>% 
+  ggplot(aes(x = age))+
+  geom_boxplot()
+
+customers %>% 
+  ggplot(aes(x = annual_income_k))+
+  geom_boxplot()
+
+customers %>% 
+  ggplot(aes(x = spending_score_1_100))+
+  geom_histogram()+
+  geom_boxplot()
+```
+When plotting the data there appear to be 5 clusters. Middle income and spending. Then 4 with low/high income against low/high spending.
+```{r}
+
+customers %>% 
+  ggplot(aes(x = annual_income_k, y = spending_score_1_100))+
+  geom_point()
+
+```
+# We are interested in creating a marketing campaign to target customers based on their spending score and annual income. Perform a k-means clustering to find if there are meaningful clusters in the data to target the customers.
+
+Using the 3 graphs below it appears as though there may be 5 clusters though the line for gap analysis does not appear to be in the expected location.
+
+```{r}
+
+customers_scaled <- customers %>% 
+  select(annual_income_k, spending_score_1_100) %>% 
+  mutate(across(everything(), scale))
+
+fviz_nbclust(customers_scaled,
+             kmeans,
+             method = "wss",
+             nstart = 25)
+
+fviz_nbclust(customers_scaled,
+             kmeans,
+             method = "silhouette",
+             nstart = 25)
+
+fviz_nbclust(customers_scaled,
+             kmeans,
+             method = "gap",
+             nstart = 25)
+```
+
+
+# Perform k-means clustering and chose a value of k.
+Have chosen 5 based on the graphs above.
+```{r}
+
+clusters <- kmeans(customers_scaled,
+                   centers = 5,
+                   nstart = 25)
+clusters
+```
+
+
+# Visualise the clustering for your chosen value of k.
+
+
+```{r}
+customers_clustered <- customers %>% 
+  mutate(cluster = as.factor(clusters$cluster))
+
+customers_clustered
+```
+
+```{r}
+
+customers_clustered %>% 
+  ggplot(aes(x = annual_income_k, y = spending_score_1_100, colour = cluster), colour = c(2:6))+
+  geom_point()
+```
+
+
+# Do you think the clustering seems a good fit for this data?
+
+Yes - based on the visualization above the data appears to fit very nicely for clustering.
+
+# Comment on the attributes on one or two of the clusters (maybe even give them a label if you like - like in section 4.1 of the ‘Segmentation & clustering intro’ lesson).
+
+Comments via labels in the plots below. Should look to attract more business in high_income, high_spend category and see how to get high_income, low_spend to spend more.
+
+```{r}
+customers_labeled <- customers_clustered %>% 
+  mutate(label = case_when(
+    cluster == 1 ~ "Mid income, mid spend",
+    cluster == 2 ~ "Low income, low spend",
+    cluster == 3 ~ "Low income, high spend",
+    cluster == 4 ~ "High income, low spend",
+    TRUE         ~ "High income, high spend"
+  ))
+
+customers_labeled
+```
+
+```{r}
+
+label_df <- customers_labeled(cluster = levels(customers_labeled$label),
+                              label = paste0(levels(customers_labeled$label)))
+
+label <- customers_labeled %>% 
+  group_by(label) %>% 
+  summarise(x = min(annual_income_k), y = max(spending_score_1_100)) %>% 
+  left_join(label_df)
+
+customers_labeled %>% 
+  ggplot(aes(x = annual_income_k, y = spending_score_1_100, colour = label), colour = c(2:6))+
+  geom_point(show.legend = FALSE)+
+  geom_text(aes(x = labs$meanai, y = labs$meanss, label = labs$label),
+            show.legend = FALSE,
+            check_overlap = TRUE,
+            size = 4,
+            colour = "black")
+```
+

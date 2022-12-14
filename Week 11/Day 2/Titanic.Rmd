@@ -208,7 +208,7 @@ rpart.plot(titanic_fit,
            faclen = 6,
            digits = 4,
            type = 4,
-           extra = 101,
+           extra = 101, # this affects the second line of data - default is proportion
            cex = 0.4)
 
 ```
@@ -336,4 +336,6 @@ plot(rf_tune)
 rf_tune
 
 ```
+
+
 
