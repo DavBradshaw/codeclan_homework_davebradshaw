@@ -1,0 +1,325 @@
+
+```{r}
+
+library(tidyverse)
+library(janitor)
+library(glmulti)
+library(caret)
+library(GGally)
+library(modelr)
+library(broom)
+library(pROC)
+```
+
+```{r}
+
+oj_with_juicy_bits <- read_csv("data/orange_juice.csv") %>% 
+  clean_names()
+
+oj_with_juicy_bits
+
+```
+
+Initial data exploration
+
+Days runs from week 227 to week 278 - change to factor
+store7 is a repeat of a variable from storeID column - remove
+store and store_id show the same thing - remove store
+The data set remains at 1070 rows when dropping na - no NA values present.
+
+```{r}
+oj_with_juicy_bits %>% 
+  count(weekof_purchase) %>% 
+  arrange(desc(weekof_purchase))
+
+oj_with_juicy_bits %>% 
+  filter(store_id == 7) %>% 
+  count(store7)
+
+oj_with_juicy_bits %>% 
+  count(store, store_id)
+
+oj_with_juicy_bits %>% 
+  drop_na()
+
+oj_with_juicy_bits %>% 
+  count(purchase)
+```
+
+Table is now set up to regard CH as 1 and MM as 0.
+
+Alias carried out on data, then further cleaned to removed alias columns. Now we have some smooth OJ.
+
+```{r}
+
+oj_smooth <- oj_with_juicy_bits %>% 
+  mutate(weekof_purchase = as_factor(weekof_purchase),
+         store_id = as_factor(store_id)) %>% 
+  select(-store7, -store) %>% 
+  mutate(purchase = ifelse(purchase == "CH", 1, 0)) %>% 
+  select(-price_mm, -disc_mm, -price_ch, -disc_ch, -sale_price_ch, - sale_price_mm)
+
+oj_smooth
+
+alias(purchase ~ ., data = oj_smooth)
+
+oj_smooth %>%
+  ggplot(aes(x = weekof_purchase, group = store_id, colour = store_id))+
+  geom_line(aes(y = price_diff))
+
+oj_smooth %>%
+  ggplot(aes(x = weekof_purchase, group = store_id, colour = store_id))+
+  geom_line(aes(y = list_price_diff))
+
+```
+Set up for doing cross validation on models generated.
+```{r}
+
+cv_10_fold <- trainControl(method = "cv",
+                           number = 10,
+                           savePredictions = TRUE)
+
+```
+
+Using glmulti the best model appears to be 1 + loyal_ch + price_diff
+
+```{r}
+
+glmutli_search_all <- glmulti(
+  purchase ~ .,
+  data = oj_smooth,
+  level = 1,
+  method= "h",
+  crit = "bic",
+  confsetsize = 10,
+  plotty = F,
+  report = T,
+  fitfunction = "glm",
+  family = binomial(link = "logit")
+)
+
+summary(glmutli_search_all)
+
+```
+
+Now trying some manual models
+
+
+
+```{r, message=FALSE}
+ggpairs(oj_smooth %>% 
+          select(purchase, store_id:loyal_ch))
+
+ggpairs(oj_smooth %>% 
+          select(purchase, price_diff:list_price_diff))
+```
+TO INVESTIGATE loyal_ch, price_diff, store_id, pct_disc_ch
+
+```{r}
+
+oj_smooth %>% 
+  ggplot(aes(y = loyal_ch, x = purchase))+
+  geom_jitter()
+
+oj_smooth %>% 
+  ggplot(aes(y = price_diff, x = purchase))+
+  geom_jitter()
+
+oj_smooth %>% 
+  ggplot(aes(y = store_id, x = purchase))+
+  geom_jitter()
+
+oj_smooth %>% 
+  ggplot(aes(y = pct_disc_ch, x = purchase))+
+  geom_jitter()
+```
+
+Build models
+
+TO INVESTIGATE loyal_ch, price_diff, store_id, pct_disc_ch
+
+From these 4 models loyal_ch gives the highest AUC value at 0.874
+
+```{r}
+
+model1a <- glm(purchase ~ loyal_ch, data = oj_smooth, family = binomial(link = "logit"))
+model1b <- glm(purchase ~ price_diff, data = oj_smooth, family = binomial(link = "logit"))
+model1c <- glm(purchase ~ store_id, data = oj_smooth, family = binomial(link = "logit"))
+model1d <- glm(purchase ~ pct_disc_ch, data = oj_smooth, family = binomial(link = "logit"))
+
+pred_model1a <- oj_smooth %>% 
+  add_predictions(model1a, type = "response")
+pred_model1b <- oj_smooth %>% 
+  add_predictions(model1b, type = "response")
+pred_model1c <- oj_smooth %>% 
+  add_predictions(model1c, type = "response")
+pred_model1d <- oj_smooth %>% 
+  add_predictions(model1d, type = "response")
+
+pred_model1a %>% 
+  roc(response = purchase, predictor = pred)
+pred_model1b %>% 
+  roc(response = purchase, predictor = pred)
+pred_model1c %>% 
+  roc(response = purchase, predictor = pred)
+pred_model1d %>% 
+  roc(response = purchase, predictor = pred)
+
+```
+
+```{r}
+roc_model1a <- pred_model1a %>% 
+  roc(response = purchase, predictor = pred)
+model1a_curve <- ggroc(data = roc_model1a, legacy.axes = TRUE)
+
+```
+
+Add another predictor
+
+
+```{r}
+
+model2a <- glm(purchase ~ loyal_ch + special_mm, data = oj_smooth, family = binomial(link = "logit"))
+model2b <- glm(purchase ~ loyal_ch + special_ch, data = oj_smooth, family = binomial(link = "logit"))
+model2c <- glm(purchase ~ loyal_ch + price_diff, data = oj_smooth, family = binomial(link = "logit"))
+model2d <- glm(purchase ~ loyal_ch + pct_disc_mm, data = oj_smooth, family = binomial(link = "logit"))
+model2e <- glm(purchase ~ loyal_ch + pct_disc_ch, data = oj_smooth, family = binomial(link = "logit"))
+model2f <- glm(purchase ~ loyal_ch + list_price_diff, data = oj_smooth, family = binomial(link = "logit"))
+model2g <- glm(purchase ~ loyal_ch + store_id, data = oj_smooth, family = binomial(link = "logit"))
+
+pred_model2a <- oj_smooth %>% 
+  add_predictions(model2a, type = "response")
+pred_model2b <- oj_smooth %>% 
+  add_predictions(model2b, type = "response")
+pred_model2c <- oj_smooth %>% 
+  add_predictions(model2c, type = "response")
+pred_model2d <- oj_smooth %>% 
+  add_predictions(model2d, type = "response")
+pred_model2e <- oj_smooth %>% 
+  add_predictions(model2e, type = "response")
+pred_model2f <- oj_smooth %>% 
+  add_predictions(model2f, type = "response")
+pred_model2g <- oj_smooth %>% 
+  add_predictions(model2g, type = "response")
+
+pred_model2a %>% 
+  roc(response = purchase, predictor = pred)
+pred_model2b %>% 
+  roc(response = purchase, predictor = pred)
+pred_model2c %>% 
+  roc(response = purchase, predictor = pred)
+pred_model2d %>% 
+  roc(response = purchase, predictor = pred)
+pred_model2e %>% 
+  roc(response = purchase, predictor = pred)
+pred_model2f %>% 
+  roc(response = purchase, predictor = pred)
+pred_model2g %>% 
+  roc(response = purchase, predictor = pred)
+```
+
+```{r}
+
+model3a <- glm(purchase ~ loyal_ch + price_diff + special_mm, data = oj_smooth, family = binomial(link = "logit"))
+model3b <- glm(purchase ~ loyal_ch + price_diff + special_ch, data = oj_smooth, family = binomial(link = "logit"))
+model3c <- glm(purchase ~ loyal_ch + price_diff + pct_disc_mm, data = oj_smooth, family = binomial(link = "logit"))
+model3d <- glm(purchase ~ loyal_ch + price_diff + pct_disc_ch, data = oj_smooth, family = binomial(link = "logit"))
+model3e <- glm(purchase ~ loyal_ch + price_diff + list_price_diff, data = oj_smooth, family = binomial(link = "logit"))
+model3f <- glm(purchase ~ loyal_ch + price_diff + store_id, data = oj_smooth, family = binomial(link = "logit"))
+
+
+pred_model3a <- oj_smooth %>% 
+  add_predictions(model3a, type = "response")
+pred_model3b <- oj_smooth %>% 
+  add_predictions(model3b, type = "response")
+pred_model3c <- oj_smooth %>% 
+  add_predictions(model3c, type = "response")
+pred_model3d <- oj_smooth %>% 
+  add_predictions(model3d, type = "response")
+pred_model3e <- oj_smooth %>% 
+  add_predictions(model3e, type = "response")
+pred_model3f <- oj_smooth %>% 
+  add_predictions(model3f, type = "response")
+
+
+pred_model3a %>% 
+  roc(response = purchase, predictor = pred)
+pred_model3b %>% 
+  roc(response = purchase, predictor = pred)
+pred_model3c %>% 
+  roc(response = purchase, predictor = pred)
+pred_model3d %>% 
+  roc(response = purchase, predictor = pred)
+pred_model3e %>% 
+  roc(response = purchase, predictor = pred)
+pred_model3f %>% 
+  roc(response = purchase, predictor = pred)
+
+
+```
+
+Mutate data so that a purchase of CH == TRUE
+
+```{r}
+
+oj_with_juicy_bits
+
+oj_extra_smooth <- oj_smooth %>%
+  mutate(purchase = as.logical(purchase)) %>% 
+  mutate(purchase = as_factor(if_else(purchase, "t", "f")))
+
+train_control <- trainControl(method = "repeatedcv", 
+                              number = 5,
+                              repeats = 100,
+                              savePredictions = TRUE, 
+                              classProbs = TRUE, 
+                              summaryFunction = twoClassSummary)
+
+train_model_1a <- train(purchase ~ loyal_ch,
+                        data = oj_extra_smooth,
+                        trControl = train_control,
+                        method = "glm",
+                        family = binomial(link = "logit"))
+
+train_model_2c <- train(purchase ~ loyal_ch + price_diff,
+                        data = oj_extra_smooth,
+                        trControl = train_control,
+                        method = "glm",
+                        family = binomial(link = "logit"))
+
+train_model_3c <- train(purchase ~ loyal_ch + price_diff + pct_disc_mm,
+                        data = oj_extra_smooth,
+                        trControl = train_control,
+                        method = "glm",
+                        family = binomial(link = "logit"))
+
+train_model_3f <- train(purchase ~ loyal_ch + price_diff + store_id,
+                        data = oj_extra_smooth,
+                        trControl = train_control,
+                        method = "glm",
+                        family = binomial(link = "logit"))
+
+```
+
+The first two variables are consistently statistically significant. The variables after are less so.
+
+```{r}
+summary(train_model_1a)
+summary(train_model_2c)
+summary(train_model_3c)
+summary(train_model_3f)
+```
+
+```{r}
+
+train_model_1a$result
+train_model_2c$result
+train_model_3c$result
+train_model_3f$result
+
+```
+
+Of the 3 models generated the ROC score changes from 0.8739 to 0.8993.
+However the final two model barely have any improvement over the second model (0.8983 Vs 0.8992 and 0.8993). 
+
+_Though the models with three components have a higher ROC (AUC) the model chosen for future use will be the two component model measuring purchase ~ loyal_ch + price_diff due to it's simpler nature._

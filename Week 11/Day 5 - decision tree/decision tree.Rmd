@@ -1,0 +1,89 @@
+```{r}
+
+library(tidyverse)
+library(janitor)
+library(janeaustenr)
+library(tidytext)
+library(textdata)
+
+```
+
+
+```{r}
+
+austen_books() %>% 
+  count(book)
+
+pp_ss <- austen_books() %>% 
+  filter(book %in% c("Sense & Sensibility", "Pride & Prejudice")) %>% 
+  unnest_tokens(word, text)
+
+```
+Below are the most common 5 words in _sense and sensibility_ and _pride and prejudice_. The order does change but in both books the 5 words are;
+* to
+* the
+* of
+* and
+* her
+
+```{r}
+
+most_pop <- pp_ss %>% 
+  group_by(book) %>% 
+  count(word) %>% 
+  slice_max(n, n = 5)
+
+most_pop
+```
+
+The most common non-stop words in these 2 books are below;
+This appers to be a series of names and the word time.
+
+```{r}
+pp_ss %>% 
+  anti_join(stop_words) %>% 
+  group_by(book) %>% 
+  count(word, sort = TRUE) %>% 
+  slice_max(n, n = 5)
+```
+
+The top sentiment words for each book are listed below. One for each book is miss which could be part of a name.
+
+```{r}
+pp_ss %>% 
+  anti_join(stop_words) %>% 
+  left_join(get_sentiments("afinn")) %>% 
+  drop_na() %>% 
+  group_by(book) %>% 
+  count(word) %>% 
+  slice_max(n, n = 5)
+```
+
+Across the two books there are around 450 occurrences where Miss is capitalized and appears to be used as part of a name. There are only around 500 instances of the word miss in these books so this would not be one of the top 5 results without it's other purpose as part of a name. Miss will therefore be removed from the previous sentiment analysis to get a more accurate answer. 
+
+```{r}
+
+austen_books() %>% 
+  filter(book %in% c("Sense & Sensibility", "Pride & Prejudice")) %>% 
+  unnest_tokens(bigram, text, token = "ngrams", n = 2, to_lower = FALSE) %>% 
+  mutate(miss = str_detect(bigram, "^Miss")) %>% 
+  filter(miss == TRUE) %>% 
+  count(book)
+  
+
+```
+
+Now there is a more accurate table of sentiments portrayed in these two books.
+
+```{r}
+
+pp_ss %>% 
+  anti_join(stop_words) %>% 
+  left_join(get_sentiments("afinn")) %>% 
+  drop_na() %>% 
+  filter(word != "miss") %>% 
+  group_by(book) %>% 
+  count(word) %>% 
+  slice_max(n, n = 5)
+
+```
