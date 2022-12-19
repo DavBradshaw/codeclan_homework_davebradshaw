@@ -28,24 +28,28 @@ by_year <- read_csv(here("data/opendata_inc9620_hb.csv"))%>%
   filter(hb == "S08000016")
 ```
 
-In general the data shows slightly more men being diagnosed with Cancer in the years 2016 to 2020 and slightly more women going back to 1996. The mean rate however remains higher in males, possibly due to a higher population of females.
+## Overview of data
+
+In general the data shows slightly more men being diagnosed with Cancer in the years 2016 to 2020 and slightly more women going back to 1996. The mean rate however remains higher in males, possibly due to a higher population of females. This shows about what would be expected for the full population.
 
 ```{r rows.print = 12}
 by_age %>%
   filter(cancer_site == "All cancer types") %>% 
   pivot_longer(cols = c(incidences_age_under5:incidences_age85and_over), names_to = "age_range", values_to = "incidences") %>% 
   group_by(sex) %>% 
-  summarise(total_for_gender_16_to_20 = sum(incidences))
+  summarise(total_for_gender_2016_to_2020 = sum(incidences), precentage = total_for_gender_2016_to_2020/4065*100) 
+  
 
 by_year %>% 
   filter(cancer_site == "All cancer types") %>% 
   group_by(sex) %>% 
-  summarise(total_for_gender_96_to_20 = sum(incidences_all_ages))
+  summarise(total_for_gender_1996_to_2020 = sum(incidences_all_ages),
+            percentage = total_for_gender_1996_to_2020/18091*100)
 
 by_year %>% 
   filter(cancer_site == "All cancer types") %>% 
   group_by(sex) %>% 
-  summarise(mean_rate_96_to_20 = mean(crude_rate))
+  summarise(mean_rate_1996_to_2020 = mean(crude_rate))
 ```
 
 Chose to look at the cancers causing the most incidences across genders. Skin cancers of various types are issues for both genders while some gender specific (or primarily in one gender) cancers are significant issues for each gender.
@@ -105,6 +109,7 @@ by_year %>%
        x = "Year",
        y = "Recorded incidences")
 ```
+## Breast Cancers
 
 There is an interesting pattern in the incidences of breast cancer with peaks every 3 years across the data set. With GP practices performing a screening program every 3 years it seems plausible that these are linked and the rise in cases relates to additional screening across the area of NHS borders.
 
@@ -116,9 +121,19 @@ by_year %>%
   labs(title = "Breast cancer incidences in Females across years",
        x = "Year",
        y = "Recorded incidences")
+
+by_year %>% 
+  mutate(label_text = ifelse(year %in% c(1996, 1999, 2002, 2005, 2008, 2011, 2014, 2017, 2020), year, " ")) %>% 
+  filter(cancer_site == "Breast", sex == "Female") %>% 
+    ggplot(aes(x = year, y = incidences_all_ages, colour = cancer_site, label = label_text)) +
+  geom_line(show.legend = FALSE)+
+  geom_text(show.legend = FALSE)+
+  labs(title = "Breast cancer incidences in Females across years",
+       x = "Year",
+       y = "Recorded incidences")
 ```
 
-There is a similar pattern in some other regions of Scotland, in particular Glasgow as shown below but not all regions.
+There is a similar pattern in some other regions of Scotland, in particular Glasgow as shown below but not all regions with only 2003/2004 not fitting this pattern.
 
 ```{r, message = FALSE, warning=FALSE, echo=FALSE}
 other_by_year <- read_csv(here("data/opendata_inc9620_hb.csv"))%>%
@@ -150,9 +165,11 @@ other_by_year %>%
        y = "Recorded incidences")
 
 other_by_year %>% 
+    mutate(label_text = ifelse(year %in% c(1997, 2000, 2003, 2006, 2009, 2012, 2015, 2018), year, " ")) %>% 
   filter(cancer_site == "Breast", sex == "Female", healthboard == "Greater Glasgow and Clyde") %>% 
-    ggplot(aes(x = year, y = incidences_all_ages)) +
-  geom_line()+
+    ggplot(aes(x = year, y = incidences_all_ages, label = label_text)) +
+  geom_line(show.legend = FALSE)+
+  geom_text(show.legend = FALSE)+
   labs(title = "Breast cancer incidences in Greater Glasgow and Clyde for Females across years",
        x = "Year",
        y = "Recorded incidences")
@@ -167,7 +184,7 @@ other_by_year %>%
        y = "Recorded incidences")
 ```
 
-Breast cancer screening begins at age 50 (or the next time screening at local GP is available). There is a large jump in incidences of Breast cancer in Females moving into age 45 to 49 age range. Should possibly consider lowering the age of screening to 45. Increase in rate for 50-54 group could partially be explained by the increased screening and therefore detection.
+Breast cancer screening begins at age 50 (or the next time screening at local GP is available). There is a large jump in incidences of Breast cancer in Females moving into age 45 to 49 age range. Should look into further causes of this but it is worth considering lowering the age of screening to 45. The increase in rate for 50-54 group could partially be explained by the increased screening and therefore detection.
 
 ```{r}
 by_age %>% 
@@ -196,3 +213,61 @@ by_age %>%
        x = "Number of Incidences per 100,000",
        y = "Age range")
 ```
+
+## Skin Cancers
+
+Then chose to look at common cancers between the sexes, namely skin cancer. Across both sexes cases of this are rising at alarming rates. 
+
+The most concerning trends are for basal cell carcinoma and non-melanoma. 
+Both are curable when caught early and with an increasing rate like shown there would be benefits to increasing awareness of what these look like and what can be done to prevent them (lower sun exposure for instance). An awareness campaign would be a suitable action to take as a result of this analysis. 
+
+```{r}
+by_year %>% 
+  filter(grepl("skin", cancer_site)) %>% 
+  distinct(cancer_site)
+
+by_year %>% 
+  filter(grepl("skin", cancer_site),
+         sex == "Female") %>% 
+  ggplot(aes(x = year, y = incidences_all_ages, colour = cancer_site))+
+  geom_line()+
+  geom_smooth(method = "lm", se = FALSE)+
+      labs(title = "Incidences of cancer in Females from 1996 to 2020",
+       x = "Year",
+       y = "Number of Incidences")
+
+by_year %>% 
+  filter(grepl("skin", cancer_site),
+         sex == "Male") %>% 
+  ggplot(aes(x = year, y = incidences_all_ages, colour = cancer_site))+
+  geom_line()+
+  geom_smooth(method = "lm", se = FALSE)+
+      labs(title = "Incidences of cancer in Males from 1996 to 2020",
+       x = "Year",
+       y = "Number of Incidences")
+```
+
+## Most deadly cancers
+
+Looked at some of the cancers with the lowest survival rates.
+Of these the trachea, bronchus and lung have the highest rate within the borders region and should be the main priority for any improvements.
+
+With this increasing it should be looked at easy to both prevent and detect this at the earliest possible stages. With more data it would help to compare these rates to survival rates to see how the treatment in the region holds up against other regions. From there a decision could be made as to whether and how to improve care for these specific diseases. 
+
+```{r}
+
+by_year %>% 
+  filter(cancer_site %in% c("All brain and CNS tumours (malignant and non-malignant)", "Pancreas", "Mesothelioma", "Liver and intrahepatic bile ducts", "Trachea, bronchus and lung", "Leukaemias")) %>%
+  filter(sex == "All") %>% 
+  ggplot(aes(x = year, y = incidences_all_ages, colour = cancer_site))+
+  geom_line()+
+  geom_smooth(method = "lm", se = FALSE)+
+      labs(title = "Incidences of cancer in Males from 1996 to 2020",
+       x = "Year",
+       y = "Number of Incidences")
+  
+```
+
+
+
+Source for selected statistics - cancerresearchuk.org, livescience.com and nhs.uk

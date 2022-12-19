@@ -156,6 +156,7 @@ pred_model1c <- oj_smooth %>%
 pred_model1d <- oj_smooth %>% 
   add_predictions(model1d, type = "response")
 
+
 pred_model1a %>% 
   roc(response = purchase, predictor = pred)
 pred_model1b %>% 
