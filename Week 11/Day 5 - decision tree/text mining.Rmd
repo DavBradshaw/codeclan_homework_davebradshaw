@@ -18,6 +18,9 @@ pp_ss <- austen_books() %>%
   filter(book %in% c("Sense & Sensibility", "Pride & Prejudice")) %>% 
   unnest_tokens(word, text)
 
+pp_ss %>% 
+  count(book)
+
 ```
 Below are the most common 5 words in _sense and sensibility_ and _pride and prejudice_. The order does change but in both books the 5 words are;
 * to
@@ -62,6 +65,14 @@ pp_ss %>%
 Across the two books there are around 450 occurrences where Miss is capitalized and appears to be used as part of a name. There are only around 500 instances of the word miss in these books so this would not be one of the top 5 results without it's other purpose as part of a name. Miss will therefore be removed from the previous sentiment analysis to get a more accurate answer. 
 
 ```{r}
+
+austen_books() %>% 
+  filter(book %in% c("Sense & Sensibility", "Pride & Prejudice")) %>% 
+  unnest_tokens(bigram, text, token = "ngrams", n = 2, to_lower = FALSE) %>% 
+  mutate(miss = str_detect(bigram, "^Miss")) %>% 
+  filter(miss == TRUE) %>% 
+  count(bigram)
+
 
 austen_books() %>% 
   filter(book %in% c("Sense & Sensibility", "Pride & Prejudice")) %>% 
