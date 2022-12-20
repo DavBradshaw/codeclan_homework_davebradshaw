@@ -1,9 +1,9 @@
 ---
 title: "NHS Borders Cancer"
 author: "D. Bradshaw"
-date: "2022-12-01"
+date: "2022-12-22"
 output: 
-  html_document:
+  ioslides_presentation:
     df_print: paged
     code_folding: hide
 ---
@@ -51,7 +51,8 @@ by_year %>%
   group_by(sex) %>% 
   summarise(mean_rate_1996_to_2020 = mean(crude_rate))
 ```
-
+---
+## Most common cancers
 Chose to look at the cancers causing the most incidences across genders. Skin cancers of various types are issues for both genders while some gender specific (or primarily in one gender) cancers are significant issues for each gender.
 
 ```{r, message = FALSE, warning=FALSE, echo=FALSE}
@@ -109,6 +110,7 @@ by_year %>%
        x = "Year",
        y = "Recorded incidences")
 ```
+---
 ## Breast Cancers
 
 There is an interesting pattern in the incidences of breast cancer with peaks every 3 years across the data set. With GP practices performing a screening program every 3 years it seems plausible that these are linked and the rise in cases relates to additional screening across the area of NHS borders.
@@ -132,7 +134,8 @@ by_year %>%
        x = "Year",
        y = "Recorded incidences")
 ```
-
+---
+## Breast cancer in other regions
 There is a similar pattern in some other regions of Scotland, in particular Glasgow as shown below but not all regions with only 2003/2004 not fitting this pattern.
 
 ```{r, message = FALSE, warning=FALSE, echo=FALSE}
@@ -183,7 +186,8 @@ other_by_year %>%
        x = "Year",
        y = "Recorded incidences")
 ```
-
+---
+## Breast cancer rates
 Breast cancer screening begins at age 50 (or the next time screening at local GP is available). There is a large jump in incidences of Breast cancer in Females moving into age 45 to 49 age range. Should look into further causes of this but it is worth considering lowering the age of screening to 45. The increase in rate for 50-54 group could partially be explained by the increased screening and therefore detection.
 
 ```{r}
@@ -213,7 +217,7 @@ by_age %>%
        x = "Number of Incidences per 100,000",
        y = "Age range")
 ```
-
+---
 ## Skin Cancers
 
 Then chose to look at common cancers between the sexes, namely skin cancer. Across both sexes cases of this are rising at alarming rates. 
@@ -246,7 +250,7 @@ by_year %>%
        x = "Year",
        y = "Number of Incidences")
 ```
-
+---
 ## Most deadly cancers
 
 Looked at some of the cancers with the lowest survival rates.
@@ -271,5 +275,3 @@ by_year %>%
 
 
 Source for selected statistics - cancerresearchuk.org, livescience.com and nhs.uk
-
-
