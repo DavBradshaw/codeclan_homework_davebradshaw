@@ -187,6 +187,23 @@ other_by_year %>%
 Breast cancer screening begins at age 50 (or the next time screening at local GP is available). There is a large jump in incidences of Breast cancer in Females moving into age 45 to 49 age range. Should look into further causes of this but it is worth considering lowering the age of screening to 45. The increase in rate for 50-54 group could partially be explained by the increased screening and therefore detection.
 
 ```{r}
+
+by_age %>% 
+  mutate(incidences_age05to09 = incidences_age5to9) %>% 
+  select(-incidences_age5to9) %>% 
+  pivot_longer(cols = c(incidences_age_under5:incidences_age85and_over, incidences_age05to09), names_to = "age_range", values_to = "cases") %>% 
+  filter(cancer_site == "Breast", sex == "Female") %>% 
+  distinct(age_range, cases) %>%
+  arrange(age_range)
+
+by_age %>% 
+  mutate(incidence_rate_age05to9 = incidence_rate_age5to9) %>% 
+  select(-incidence_rate_age5to9) %>% 
+  pivot_longer(cols = c(incidence_rate_age_under5:incidence_rate_age85and_over, incidence_rate_age05to9), names_to = "age_range", values_to = "cases") %>%   
+  filter(cancer_site == "Breast", sex == "Female") %>% 
+  distinct(age_range, cases) %>%
+  arrange(age_range)
+
 by_age %>% 
   mutate(incidences_age05to09 = incidences_age5to9) %>% 
   select(-incidences_age5to9) %>% 
@@ -234,17 +251,20 @@ by_year %>%
   geom_smooth(method = "lm", se = FALSE)+
       labs(title = "Incidences of cancer in Females from 1996 to 2020",
        x = "Year",
-       y = "Number of Incidences")
+       y = "Number of Incidences")+
+  scale_y_continuous(limits = c(0,220))
 
 by_year %>% 
   filter(grepl("skin", cancer_site),
          sex == "Male") %>% 
-  ggplot(aes(x = year, y = incidences_all_ages, colour = cancer_site))+
+  ggplot(aes(x = year, y = incidences_all_ages, colour = cancer_site), ymax = 220)+
   geom_line()+
   geom_smooth(method = "lm", se = FALSE)+
       labs(title = "Incidences of cancer in Males from 1996 to 2020",
        x = "Year",
-       y = "Number of Incidences")
+       y = "Number of Incidences")+
+  scale_y_continuous(limits = c(0,220))
+
 ```
 
 ## Most deadly cancers
@@ -268,6 +288,41 @@ by_year %>%
   
 ```
 
+```{r}
+by_age %>% 
+  mutate(incidences_age05to09 = incidences_age5to9) %>% 
+  select(-incidences_age5to9) %>% 
+  pivot_longer(cols = c(incidences_age_under5:incidences_age85and_over, incidences_age05to09), names_to = "age_range", values_to = "cases") %>% 
+  filter(cancer_site == "Trachea, bronchus and lung", sex == "All") %>% 
+  distinct(age_range, cases) %>%
+  arrange(age_range)
+
+by_age %>% 
+  mutate(incidences_age05to09 = incidences_age5to9) %>% 
+  select(-incidences_age5to9) %>% 
+  pivot_longer(cols = c(incidences_age_under5:incidences_age85and_over, incidences_age05to09), names_to = "age_range", values_to = "cases") %>% 
+  filter(cancer_site == "Trachea, bronchus and lung", sex == "All") %>% 
+  distinct(age_range, cases) %>%
+  arrange(age_range) %>% 
+    ggplot()+
+  geom_col(aes(y = age_range, x = cases), fill = "coral")+
+  labs(title = "Total incidences of by age",
+       x = "Number of Incidences",
+       y = "Age range")
+
+by_age %>% 
+  mutate(incidence_rate_age05to9 = incidence_rate_age5to9) %>% 
+  select(-incidence_rate_age5to9) %>% 
+  pivot_longer(cols = c(incidence_rate_age_under5:incidence_rate_age85and_over, incidence_rate_age05to9), names_to = "age_range", values_to = "cases") %>% 
+  filter(cancer_site == "Trachea, bronchus and lung", sex == "All") %>% 
+  distinct(age_range, cases) %>%
+  arrange(age_range) %>% 
+    ggplot()+
+  geom_col(aes(y = age_range, x = cases), fill = "blue")+
+    labs(title = "Rate of incidences by age",
+       x = "Number of Incidences per 100,000",
+       y = "Age range")
+```
 
 
 Source for selected statistics - cancerresearchuk.org, livescience.com and nhs.uk
