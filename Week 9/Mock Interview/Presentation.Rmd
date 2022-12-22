@@ -282,7 +282,7 @@ by_year %>%
   ggplot(aes(x = year, y = incidences_all_ages, colour = cancer_site))+
   geom_line()+
   geom_smooth(method = "lm", se = FALSE)+
-      labs(title = "Incidences of cancer in Males from 1996 to 2020",
+      labs(title = "Incidences of least suvivable cancers from 1996 to 2020",
        x = "Year",
        y = "Number of Incidences")
   
